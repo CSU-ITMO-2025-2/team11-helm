@@ -3,9 +3,22 @@ nameOverride: ""
 fullnameOverride: ""
 namespace: "team11-ns"
 
+# Network Policy - restrict traffic to within namespace
+networkPolicy:
+  enabled: true
+  # Allow egress to external services (DNS, HTTPS for OpenAI API)
+  allowExternalEgress: true
+  # Namespace where ingress controller runs (for allowing ingress traffic)
+  ingressNamespace: "ingress-nginx"
+
+# image:
+#   repository: llamator      # your local repo
+#   tag: "local"              # or "0.1.0"
+#   pullPolicy: IfNotPresent
+
 image:
-  repository: llamator      # your local repo / namespace
-  tag: "local"              # or "0.1.0"
+  repository: ilchoss/llamator-mcp
+  tag: "v0.1.0"
   pullPolicy: IfNotPresent
 
 redis:
@@ -18,7 +31,13 @@ redis:
     enabled: false
     size: 1Gi
     storageClass: ""
-  resources: {}
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
 
 api:
   replicaCount: 1
@@ -59,7 +78,13 @@ api:
     LLAMATOR_MCP_MCP_MOUNT_PATH: "/mcp"
     LLAMATOR_MCP_MCP_STREAMABLE_HTTP_PATH: "/"
 
-  resources: {}
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
 
   volumeMounts:
     artifactsPath: /data/artifacts
@@ -96,7 +121,13 @@ worker:
     LLAMATOR_MCP_MCP_MOUNT_PATH: "/mcp"
     LLAMATOR_MCP_MCP_STREAMABLE_HTTP_PATH: "/"
 
-  resources: {}
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
 
   volumeMounts:
     artifactsPath: /data/artifacts
@@ -133,16 +164,19 @@ openai:
       key: "LLAMATOR_MCP_TARGET_OPENAI_API_KEY"
 
 ingress:
-  enabled: false
+  enabled: true
+  # enabled: false
   className: "nginx"
-  annotations: {}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
-    - host: "llamator.localtest"
+    - host: "llamator.kubepractice.ru"
       paths:
         - path: /
           pathType: Prefix
-  tls: []
-  #   - secretName: llamator-tls
-  #     hosts:
-  #       - "llamator.localtest"
+  tls:
+    - secretName: demo-prod-secret
+      hosts:
+        - "llamator.kubepractice.ru"
 

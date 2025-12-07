@@ -3,6 +3,12 @@ nameOverride: ""
 fullnameOverride: ""
 namespace: "team11-ns"
 
+# Combined deployment: api + worker in same pod (share artifacts via emptyDir)
+# Enable this if you don't have a ReadWriteMany storage class
+combinedDeployment:
+  enabled: true
+  replicaCount: 1
+
 # Network Policy - restrict traffic to within namespace
 networkPolicy:
   enabled: true

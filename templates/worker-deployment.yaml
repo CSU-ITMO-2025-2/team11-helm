@@ -1,3 +1,4 @@
+{{- if not .Values.combinedDeployment.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -77,4 +78,5 @@ spec:
             claimName: {{ include "llamator.fullname" . }}-artifacts-pvc
 {{- else }}
           emptyDir: {}
+{{- end }}
 {{- end }}

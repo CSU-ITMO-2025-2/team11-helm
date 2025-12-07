@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "llamator.fullname" . }}-redis
+  namespace: {{ include "llamator.namespace" . }}
+  labels:
+    {{- include "llamator.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "llamator.fullname" . }}-redis
+  template:
+    metadata:
+      labels:
+        app: {{ include "llamator.fullname" . }}-redis
+        {{- include "llamator.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          args: ["redis-server", "--appendonly", "yes"]
+          ports:
+            - containerPort: {{ .Values.redis.port }}
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          resources: {{- toYaml .Values.redis.resources | nindent 12 }}
+      volumes:
+        - name: redis-data
+{{- if .Values.redis.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "llamator.fullname" . }}-redis-pvc
+{{- else }}
+          emptyDir: {}
+{{- end }}

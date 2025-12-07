@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "llamator.fullname" . }}-worker
+  namespace: {{ include "llamator.namespace" . }}
+  labels:
+    {{- include "llamator.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "llamator.fullname" . }}-worker
+  template:
+    metadata:
+      labels:
+        app: {{ include "llamator.fullname" . }}-worker
+        {{- include "llamator.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - "arq"
+            - "llamator_mcp_server.worker_settings.WorkerSettings"
+
+          env:
+            # non-secret worker envs
+{{- range $name, $value := .Values.worker.env }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+{{- end }}
+
+            # OpenAI attack model (same config contract as API)
+            - name: LLAMATOR_MCP_ATTACK_OPENAI_BASE_URL
+              value: {{ .Values.openai.attack.baseUrl | quote }}
+            - name: LLAMATOR_MCP_ATTACK_OPENAI_MODEL
+              value: {{ .Values.openai.attack.model | quote }}
+            - name: LLAMATOR_MCP_ATTACK_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.openai.attack.secret.name }}
+                  key: {{ .Values.openai.attack.secret.key }}
+
+            # OpenAI judge model
+            - name: LLAMATOR_MCP_JUDGE_OPENAI_BASE_URL
+              value: {{ .Values.openai.judge.baseUrl | quote }}
+            - name: LLAMATOR_MCP_JUDGE_OPENAI_MODEL
+              value: {{ .Values.openai.judge.model | quote }}
+            - name: LLAMATOR_MCP_JUDGE_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.openai.judge.secret.name }}
+                  key: {{ .Values.openai.judge.secret.key }}
+
+            # OpenAI target model
+            - name: LLAMATOR_MCP_TARGET_OPENAI_BASE_URL
+              value: {{ .Values.openai.target.baseUrl | quote }}
+            - name: LLAMATOR_MCP_TARGET_OPENAI_MODEL
+              value: {{ .Values.openai.target.model | quote }}
+            - name: LLAMATOR_MCP_TARGET_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.openai.target.secret.name }}
+                  key: {{ .Values.openai.target.secret.key }}
+
+          volumeMounts:
+            - name: artifacts
+              mountPath: {{ .Values.worker.volumeMounts.artifactsPath }}
+          resources: {{- toYaml .Values.worker.resources | nindent 12 }}
+      volumes:
+        - name: artifacts
+{{- if .Values.artifactsVolume.useEmptyDir }}
+          emptyDir: {}
+{{- else if .Values.artifactsVolume.persistentVolumeClaim.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "llamator.fullname" . }}-artifacts-pvc
+{{- else }}
+          emptyDir: {}
+{{- end }}

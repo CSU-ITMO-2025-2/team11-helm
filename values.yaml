@@ -1,0 +1,148 @@
+# Global-ish
+nameOverride: ""
+fullnameOverride: ""
+namespace: "team11-ns"
+
+image:
+  repository: llamator      # your local repo / namespace
+  tag: "local"              # or "0.1.0"
+  pullPolicy: IfNotPresent
+
+redis:
+  image:
+    repository: redis
+    tag: "7.4-alpine"
+    pullPolicy: IfNotPresent
+  port: 6379
+  persistence:
+    enabled: false
+    size: 1Gi
+    storageClass: ""
+  resources: {}
+
+api:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  containerPort: 8000
+  api:
+    replicaCount: 1
+
+  hostAliases: []
+  #   - ip: "192.168.49.1"
+  #     hostnames:
+  #       - "host.docker.internal"
+
+  env:
+    # Redis
+    LLAMATOR_MCP_REDIS_DSN: "redis://llamator-llamator-redis:6379/0"
+
+    # Storage for artifacts
+    LLAMATOR_MCP_ARTIFACTS_ROOT: "/data/artifacts"
+
+    # Optional API auth for HTTP/MCP endpoints (empty = disabled)
+    LLAMATOR_MCP_API_KEY: ""
+
+    # ARQ job timeout (seconds)
+    LLAMATOR_MCP_RUN_TIMEOUT_SECONDS: "3600"
+
+    # Report language
+    LLAMATOR_MCP_REPORT_LANGUAGE: "ru"
+
+    # HTTP / uvicorn
+    LLAMATOR_MCP_HTTP_HOST: "0.0.0.0"
+    LLAMATOR_MCP_HTTP_PORT: "8000"
+    LLAMATOR_MCP_UVICORN_LOG_LEVEL: "info"
+
+    # MCP mounting / streamable paths
+    LLAMATOR_MCP_MCP_MOUNT_PATH: "/mcp"
+    LLAMATOR_MCP_MCP_STREAMABLE_HTTP_PATH: "/"
+
+  resources: {}
+
+  volumeMounts:
+    artifactsPath: /data/artifacts
+
+worker:
+  replicaCount: 1
+  # reuses same image.* as api by default
+  command:
+    - "arq"
+    - "llamator_mcp_server.worker_settings.WorkerSettings"
+
+  env:
+    # Redis
+    LLAMATOR_MCP_REDIS_DSN: "redis://llamator-llamator-redis:6379/0"
+
+    # Storage for artifacts
+    LLAMATOR_MCP_ARTIFACTS_ROOT: "/data/artifacts"
+
+    # Optional API auth for HTTP/MCP endpoints (empty = disabled)
+    LLAMATOR_MCP_API_KEY: ""
+
+    # ARQ job timeout (seconds)
+    LLAMATOR_MCP_RUN_TIMEOUT_SECONDS: "3600"
+
+    # Report language
+    LLAMATOR_MCP_REPORT_LANGUAGE: "ru"
+
+    # HTTP / uvicorn
+    LLAMATOR_MCP_HTTP_HOST: "0.0.0.0"
+    LLAMATOR_MCP_HTTP_PORT: "8000"
+    LLAMATOR_MCP_UVICORN_LOG_LEVEL: "info"
+
+    # MCP mounting / streamable paths
+    LLAMATOR_MCP_MCP_MOUNT_PATH: "/mcp"
+    LLAMATOR_MCP_MCP_STREAMABLE_HTTP_PATH: "/"
+
+  resources: {}
+
+  volumeMounts:
+    artifactsPath: /data/artifacts
+
+artifactsVolume:
+  # for dev: just emptyDir, later you can do PVC
+  useEmptyDir: true
+  persistentVolumeClaim:
+    enabled: false
+    size: 1Gi
+    storageClass: ""
+
+# OpenAI config: attack & target models separately
+openai:
+  attack:
+    baseUrl: "https://api.vsegpt.ru/v1"
+    model: "meta-llama/llama-3.1-8b-instruct"
+    secret:
+      name: "llamator-openai-keys"
+      key: "LLAMATOR_MCP_ATTACK_OPENAI_API_KEY"
+
+  judge:
+    baseUrl: "https://api.vsegpt.ru/v1"
+    model: "meta-llama/llama-3.1-8b-instruct"
+    secret:
+      name: "llamator-openai-keys"
+      key: "LLAMATOR_MCP_JUDGE_OPENAI_API_KEY"
+
+  target:
+    baseUrl: "https://api.vsegpt.ru/v1"
+    model: "meta-llama/llama-3.1-8b-instruct"
+    secret:
+      name: "llamator-openai-keys"
+      key: "LLAMATOR_MCP_TARGET_OPENAI_API_KEY"
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: "llamator.localtest"
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #   - secretName: llamator-tls
+  #     hosts:
+  #       - "llamator.localtest"
+

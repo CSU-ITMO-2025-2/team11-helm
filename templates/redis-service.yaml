@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "llamator.fullname" . }}-redis
+  namespace: {{ include "llamator.namespace" . }}
+  labels:
+    {{- include "llamator.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.redis.port }}
+      targetPort: {{ .Values.redis.port }}
+  selector:
+    app: {{ include "llamator.fullname" . }}-redis
+

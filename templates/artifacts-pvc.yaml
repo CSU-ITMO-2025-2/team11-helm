@@ -1,0 +1,19 @@
+{{- if .Values.artifactsVolume.persistentVolumeClaim.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "llamator.fullname" . }}-artifacts-pvc
+  namespace: {{ include "llamator.namespace" . }}
+  labels:
+    {{- include "llamator.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.artifactsVolume.persistentVolumeClaim.size }}
+  {{- if .Values.artifactsVolume.persistentVolumeClaim.storageClass }}
+  storageClassName: {{ .Values.artifactsVolume.persistentVolumeClaim.storageClass }}
+  {{- end }}
+{{- end }}
+

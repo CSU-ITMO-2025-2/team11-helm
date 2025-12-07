@@ -133,11 +133,14 @@ worker:
     artifactsPath: /data/artifacts
 
 artifactsVolume:
-  # for dev: just emptyDir, later you can do PVC
+  # Set to false and enable PVC to share artifacts between api and worker
+  # WARNING: emptyDir means api and worker do NOT share artifacts!
   useEmptyDir: true
   persistentVolumeClaim:
     enabled: false
     size: 1Gi
+    # storageClass must support ReadWriteMany (e.g., NFS, CephFS, etc.)
+    # Ask your cluster admin for available storage classes
     storageClass: ""
 
 # OpenAI config: attack & target models separately

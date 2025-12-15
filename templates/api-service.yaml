@@ -1,16 +1,23 @@
-{{- if not .Values.combinedDeployment.enabled }}
+{{- if .Values.api.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "llamator.fullname" . }}-api
-  namespace: {{ include "llamator.namespace" . }}
+  name: {{ include "llamator-mcp.api.fullname" . }}
+  namespace: {{ include "llamator-mcp.namespace" . }}
   labels:
-    {{- include "llamator.labels" . | nindent 4 }}
+    {{- include "llamator-mcp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+  {{- with .Values.api.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.api.service.type }}
   ports:
     - port: {{ .Values.api.service.port }}
-      targetPort: {{ .Values.api.containerPort }}
+      targetPort: {{ .Values.api.service.targetPort }}
+      protocol: TCP
+      name: http
   selector:
-    app: {{ include "llamator.fullname" . }}-api
+    {{- include "llamator-mcp.api.selectorLabels" . | nindent 4 }}
 {{- end }}

@@ -27,27 +27,18 @@ vault:
   skipVerify: false
   
   # ============================================
-  # Vault Secrets Operator with UserPass Auth
+  # Vault Secrets Operator Configuration
   # ============================================
+  # JWT auth - uses Kubernetes ServiceAccount token to authenticate with external Vault
   vaultSecretsOperator:
     # Enable VSO method
     enabled: true
     
-    # UserPass auth mount path in Vault
-    # Note: Using userpass instead of kubernetes auth
-    authMount: "userpass"
+    # Auth method: jwt for external Vault
+    authMount: "jwt"
+    authMountPath: "jwt"  # Mount path in Vault (where JWT auth is enabled)
     
-    # Vault userpass mount path (default: userpass)
-    userpassMount: "userpass"
-    
-    # Username for Vault userpass auth
-    username: "team11"
-    
-    # Kubernetes Secret containing the password
-    # Create it with: kubectl create secret generic vault-userpass-auth --from-literal=password='YOUR_PASSWORD'
-    userpassSecretRef: "vault-userpass-auth"
-    
-    # Role name (used as fallback for username if not specified)
+    # Role configured in Vault's JWT auth
     role: "llamator-mcp"
     
     # KV secrets engine mount path

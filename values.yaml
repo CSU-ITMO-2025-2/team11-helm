@@ -308,15 +308,19 @@ vault:
     secretPath: "secret/data/llamator-mcp"
   
   # Vault Secrets Operator (CRD-based)
+  # Supported auth methods: kubernetes, jwt, appRole (NOT userpass!)
   vaultSecretsOperator:
     enabled: false
+    # Auth method: kubernetes, jwt, or appRole
     authMount: "kubernetes"
-    # For userpass auth
-    userpassMount: "userpass"
-    username: ""  # Vault username (for userpass auth)
-    userpassSecretRef: "vault-userpass-auth"  # K8s Secret with password
-    # General settings
+    authMountPath: ""  # Custom mount path (default: same as authMount)
     role: "llamator-mcp"
+    # For appRole auth
+    appRole:
+      roleId: ""
+      secretRef: "vault-approle-secret"
+      secretKey: "secret-id"
+    # General settings
     mount: "secret"
     secretPath: "llamator-mcp"
     refreshAfter: "5m"

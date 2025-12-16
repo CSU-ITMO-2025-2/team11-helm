@@ -37,8 +37,17 @@ vault:
     # Note: Using userpass instead of kubernetes auth
     authMount: "userpass"
     
-    # Vault role/username for authentication
-    # Credentials will be stored in Kubernetes Secret
+    # Vault userpass mount path (default: userpass)
+    userpassMount: "userpass"
+    
+    # Username for Vault userpass auth
+    username: "team11"
+    
+    # Kubernetes Secret containing the password
+    # Create it with: kubectl create secret generic vault-userpass-auth --from-literal=password='YOUR_PASSWORD'
+    userpassSecretRef: "vault-userpass-auth"
+    
+    # Role name (used as fallback for username if not specified)
     role: "llamator-mcp"
     
     # KV secrets engine mount path

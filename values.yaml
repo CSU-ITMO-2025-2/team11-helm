@@ -311,13 +311,17 @@ vault:
   vaultSecretsOperator:
     enabled: false
     authMount: "kubernetes"
+    # For userpass auth
+    userpassMount: "userpass"
+    username: ""  # Vault username (for userpass auth)
+    userpassSecretRef: "vault-userpass-auth"  # K8s Secret with password
+    # General settings
     role: "llamator-mcp"
     mount: "secret"
     secretPath: "llamator-mcp"
     refreshAfter: "5m"
     vaultConnectionRef: "vault-connection"
     createConnection: true
-    userpassSecretRef: ""
 
 # -----------------------------------------------------------------------------
 # Service Account & RBAC

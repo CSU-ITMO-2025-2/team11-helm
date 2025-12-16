@@ -286,7 +286,12 @@ security:
 # -----------------------------------------------------------------------------
 storage:
   s3:
-    enabled: false
+    enabled: true
+    # S3 endpoint URL (для reg.ru, AWS, MinIO и т.д.)
+    endpoint: "https://s3.regru.cloud"
+    bucket: "team11"
+    region: ""  # Оставь пустым, если reg.ru не требует
+    # Секрет с credentials
     existingSecret: "llamator-s3-keys"
     accessKeyIdKey: "S3_ACCESS_KEY_ID"
     secretAccessKeyKey: "S3_ACCESS_KEY"

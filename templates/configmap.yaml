@@ -44,4 +44,11 @@ data:
   LLAMATOR_MCP_TARGET_OPENAI_MODEL: {{ .Values.security.openai.target.model | quote }}
   LLAMATOR_MCP_TARGET_OPENAI_TEMPERATURE: {{ .Values.security.openai.target.temperature | quote }}
   LLAMATOR_MCP_TARGET_OPENAI_SYSTEM_PROMPTS: {{ .Values.security.openai.target.systemPrompts | quote }}
+  
+  {{- if .Values.storage.s3.enabled }}
+  # S3 Storage configuration
+  S3_ENDPOINT: {{ .Values.storage.s3.endpoint | quote }}
+  S3_BUCKET: {{ .Values.storage.s3.bucket | quote }}
+  S3_REGION: {{ .Values.storage.s3.region | quote }}
+  {{- end }}
 

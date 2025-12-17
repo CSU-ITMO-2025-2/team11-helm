@@ -17,7 +17,7 @@ fullnameOverride: ""
 # -----------------------------------------------------------------------------
 image:
   repository: ilchoss/llamator-mcp
-  tag: "v0.1.0"
+  tag: "v0.2.0"
   pullPolicy: IfNotPresent
 
 # -----------------------------------------------------------------------------
@@ -25,7 +25,7 @@ image:
 # -----------------------------------------------------------------------------
 api:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   containerPort: 8000
   
   service:
@@ -35,9 +35,9 @@ api:
     annotations: {}
   
   autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 10
+    enabled: false  # Disabled to stay within 3 CPU / 6 GiB quota
+    minReplicas: 1
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80
   
@@ -99,12 +99,12 @@ api:
 # -----------------------------------------------------------------------------
 worker:
   enabled: true
-  replicaCount: 3
+  replicaCount: 1
   
   autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 15
+    enabled: false  # Disabled to stay within 3 CPU / 6 GiB quota
+    minReplicas: 1
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 75
     targetMemoryUtilizationPercentage: 80
   
@@ -129,7 +129,7 @@ worker:
       cpu: "300m"
       memory: "512Mi"
     limits:
-      cpu: "2000m"
+      cpu: "1500m"
       memory: "2Gi"
   
   podSecurityContext:
@@ -170,7 +170,7 @@ redis:
     targetPort: 6379
   
   persistence:
-    enabled: true
+    enabled: false  # Disabled - using emptyDir for learning environment
     size: 10Gi
     storageClass: "standard"
     accessMode: ReadWriteOnce
@@ -205,9 +205,9 @@ redis:
 # Artifacts Storage Configuration
 # -----------------------------------------------------------------------------
 artifacts:
-  useEmptyDir: false
+  useEmptyDir: true  # Using emptyDir for learning environment
   persistence:
-    enabled: true
+    enabled: false  # Disabled - using emptyDir instead
     size: 20Gi
     storageClass: "standard"
     accessMode: ReadWriteMany

@@ -1,7 +1,3 @@
-# Configuration for LLAMATOR MCP with External HashiCorp Vault via External Secrets Operator
-# Vault Address: https://vault.kubepractice.ru
-# Uses ClusterSecretStore: vault-backend (уже настроен в кластере)
-
 # ============================================
 # Basic Configuration
 # ============================================
@@ -19,7 +15,7 @@ image:
 externalSecrets:
   # Включить интеграцию с ESO
   enabled: true
-  
+
   # SecretStore в namespace (не нужны cluster-wide права)
   secretStoreKind: SecretStore
   secretStoreName: "vault-backend"  # Или имя SecretStore в твоём namespace
@@ -31,14 +27,39 @@ externalSecrets:
   #   kv/data/team11/llamator/s3     - ACCESS_KEY_ID, SECRET_ACCESS_KEY
   vaultPath: "kv/data/team11/llamator"
   
-  # Интервал синхронизации
-  refreshInterval: "1m"
+  # ============================================
+  # Vault Secrets Operator Configuration
+  # ============================================
+  # JWT auth - uses Kubernetes ServiceAccount token to authenticate with external Vault
+  vaultSecretsOperator:
+    # Enable VSO method
+    enabled: true
 
-# Vault Agent Injector выключен (используем ESO)
-vault:
-  enabled: false
-  agentInjector:
-    enabled: false
+    # Auth method: jwt for external Vault
+    authMount: "jwt"
+    authMountPath: "jwt"  # Mount path in Vault (where JWT auth is enabled)
+
+    # Role configured in Vault's JWT auth
+    role: "llamator-mcp"
+
+    # KV secrets engine mount path
+    mount: "kv"
+
+    # Base path for secrets in Vault
+    # Full paths:
+    #   /v1/kv/data/team11/llamator/openai
+    #   /v1/kv/data/team11/llamator/api
+    #   /v1/kv/data/team11/llamator/storage
+    secretPath: "team11/llamator"
+
+    # How often to check for secret updates
+    refreshAfter: "1m"
+
+    # VaultConnection resource name
+    vaultConnectionRef: "vault-connection-external"
+
+    # Create VaultConnection resource
+    createConnection: true
 
 # ============================================
 # API Configuration

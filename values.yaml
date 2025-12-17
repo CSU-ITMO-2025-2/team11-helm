@@ -286,7 +286,12 @@ security:
 # -----------------------------------------------------------------------------
 storage:
   s3:
-    enabled: false
+    enabled: true
+    # S3 endpoint URL (для reg.ru, AWS, MinIO и т.д.)
+    endpoint: "https://s3.regru.cloud"
+    bucket: "team11"
+    region: ""  # Оставь пустым, если reg.ru не требует
+    # Секрет с credentials
     existingSecret: "llamator-s3-keys"
     accessKeyIdKey: "S3_ACCESS_KEY_ID"
     secretAccessKeyKey: "S3_ACCESS_KEY"
@@ -325,6 +330,26 @@ vault:
     enabled: false
     role: "llamator-mcp"
     secretPath: "secret/data/llamator-mcp"
+
+  # Vault Secrets Operator (CRD-based)
+  # Supported auth methods: kubernetes, jwt, appRole (NOT userpass!)
+  vaultSecretsOperator:
+    enabled: false
+    # Auth method: kubernetes, jwt, or appRole
+    authMount: "kubernetes"
+    authMountPath: ""  # Custom mount path (default: same as authMount)
+    role: "llamator-mcp"
+    # For appRole auth
+    appRole:
+      roleId: ""
+      secretRef: "vault-approle-secret"
+      secretKey: "secret-id"
+    # General settings
+    mount: "secret"
+    secretPath: "llamator-mcp"
+    refreshAfter: "5m"
+    vaultConnectionRef: "vault-connection"
+    createConnection: true
 
 # -----------------------------------------------------------------------------
 # Service Account & RBAC

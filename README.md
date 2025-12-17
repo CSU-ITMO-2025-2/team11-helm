@@ -7,35 +7,52 @@ Production-ready Helm chart for deploying **LLAMATOR MCP Server** - a platform f
 
 ## Quick Start
 
-### 1. Create Secrets
+### Prerequisites
+
+- Kubernetes 1.25+
+- Helm 3.0+
+- External Secrets Operator (ESO) installed in cluster
+- SecretStore `vault-team11` configured in your namespace
+
+### 1. Create Secrets in Vault
 
 ```bash
-# Create OpenAI API keys secret
-kubectl create secret generic llamator-openai-keys \
-  --from-literal=LLAMATOR_MCP_ATTACK_OPENAI_API_KEY='YOUR_ATTACK_KEY' \
-  --from-literal=LLAMATOR_MCP_JUDGE_OPENAI_API_KEY='YOUR_JUDGE_KEY' \
-  --from-literal=LLAMATOR_MCP_TARGET_OPENAI_API_KEY='YOUR_TARGET_KEY' \
-  --namespace <your-namespace>
+# OpenAI API Key
+vault kv put kv/team11/llamator/openai OPENAI_API_KEY="sk-..."
+
+# API Key for client authentication
+vault kv put kv/team11/llamator/api API_KEY="your-api-key"
+
+# S3 credentials (optional)
+vault kv put kv/team11/llamator/s3 \
+  ACCESS_KEY_ID="..." \
+  SECRET_ACCESS_KEY="..."
 ```
 
 ### 2. Install the Chart
 
 ```bash
 # Install with default values
-helm install llamator ./ --namespace <your-namespace> --create-namespace
+helm install llamator ./ -n team11-ns
 
-# Or with custom values
-helm install llamator ./ -f values-example-production.yaml --namespace <your-namespace>
+# Or upgrade existing release
+helm upgrade --install llamator ./ -n team11-ns
 ```
 
 ### 3. Verify Installation
 
 ```bash
+# Check ExternalSecrets synced
+kubectl get externalsecret -n team11-ns
+
+# Check secrets created
+kubectl get secret -n team11-ns
+
 # Check pods
-kubectl get pods -n <your-namespace>
+kubectl get pods -n team11-ns
 
 # Run Helm tests
-helm test llamator -n <your-namespace>
+helm test llamator -n team11-ns
 ```
 
 ## Configuration
@@ -44,117 +61,40 @@ helm test llamator -n <your-namespace>
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `api.enabled` | Enable API server | `true` |
-| `api.replicaCount` | Number of API replicas | `1` |
-| `api.autoscaling.enabled` | Enable HPA for API | `false` |
-| `worker.enabled` | Enable Worker | `true` |
-| `worker.replicaCount` | Number of Worker replicas | `1` |
+| `global.namespace` | Target namespace | `team11-ns` |
+| `api.replicaCount` | Number of API replicas | `2` |
+| `api.autoscaling.enabled` | Enable HPA for API | `true` |
+| `worker.replicaCount` | Number of Worker replicas | `3` |
+| `worker.autoscaling.enabled` | Enable HPA for Worker | `true` |
 | `redis.enabled` | Enable Redis | `true` |
-| `redis.persistence.enabled` | Enable Redis persistence | `false` |
+| `redis.persistence.enabled` | Enable Redis persistence | `true` |
 | `ingress.enabled` | Enable Ingress | `true` |
-| `networkPolicy.enabled` | Enable NetworkPolicy | `true` |
-| `vault.enabled` | Enable Vault integration | `false` |
+| `externalSecrets.enabled` | Enable ESO integration | `true` |
 
-### Example: Custom Configuration
+### External Secrets Operator Configuration
 
-```yaml
-# custom-values.yaml
-api:
-  replicaCount: 3
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 10
-
-worker:
-  replicaCount: 5
-  autoscaling:
-    enabled: true
-
-redis:
-  persistence:
-    enabled: true
-    size: 10Gi
-
-ingress:
-  hosts:
-    - host: llamator.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-```
-
-```bash
-helm install llamator ./ -f custom-values.yaml
-```
-
-### Configuration with Vault
+Secrets are automatically synced from Vault via External Secrets Operator:
 
 ```yaml
-# values-vault.yaml
-vault:
+externalSecrets:
   enabled: true
-  address: "https://vault.example.com"
-  
-  vaultSecretsOperator:
+  secretStoreKind: SecretStore
+  secretStoreName: "vault-team11"
+  vaultPath: "kv/data/team11/llamator"
+  refreshInterval: "1m"
+```
+
+### S3 Storage Configuration
+
+```yaml
+storage:
+  s3:
     enabled: true
-    authMount: "kubernetes"
-    role: "llamator-mcp"
-    mount: "secret"
-    secretPath: "llamator-mcp"
-    refreshAfter: "5m"
-    vaultConnectionRef: "vault-connection"
-    createConnection: true
-
-security:
-  createExampleSecrets: false  # Important!
+    endpoint: "https://s3.regru.cloud"
+    bucket: "team11"
+    region: ""
+    existingSecret: "llamator-s3-keys"
 ```
-
-### Vault Secrets Structure
-
-Create the following secrets in Vault:
-
-```bash
-# OpenAI API Keys
-vault kv put secret/llamator-mcp/openai \
-  LLAMATOR_MCP_ATTACK_OPENAI_API_KEY="..." \
-  LLAMATOR_MCP_JUDGE_OPENAI_API_KEY="..." \
-  LLAMATOR_MCP_TARGET_OPENAI_API_KEY="..."
-
-# API Key (optional)
-vault kv put secret/llamator-mcp/api \
-  LLAMATOR_MCP_API_KEY="..."
-
-# S3 Storage (optional)
-vault kv put secret/llamator-mcp/storage \
-  S3_ACCESS_KEY_ID="..." \
-  S3_ACCESS_KEY="..."
-```
-
-## 🏭 Production Deployment
-
-For production deployments, use `values-example-production.yaml` as a starting point:
-
-```bash
-# Copy and customize production values
-cp values-example-production.yaml values-production.yaml
-# Edit values-production.yaml with your settings
-
-# Deploy
-helm install llamator ./ -f values-production.yaml -n production
-```
-
-### Production Checklist
-
-- [ ] Enable API key authentication (`security.apiKey.enabled: true`)
-- [ ] Configure HPA for API and Worker
-- [ ] Enable PodDisruptionBudgets
-- [ ] Enable Redis persistence
-- [ ] Configure proper resource limits
-- [ ] Enable NetworkPolicy
-- [ ] Configure TLS via cert-manager
-- [ ] Set up monitoring (ServiceMonitor)
-- [ ] Consider Vault for secrets management
 
 ## Monitoring
 
@@ -170,14 +110,24 @@ monitoring:
       release: prometheus
 ```
 
-### Pod Annotations for Prometheus
+## Troubleshooting
 
-```yaml
-monitoring:
-  podAnnotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "8000"
-    prometheus.io/path: "/metrics"
+### Check ExternalSecret status
+
+```bash
+kubectl describe externalsecret -n team11-ns
+```
+
+### Check pod logs
+
+```bash
+kubectl logs -n team11-ns -l app.kubernetes.io/name=llamator-mcp
+```
+
+### Verify secrets
+
+```bash
+kubectl get secret llamator-openai-keys -n team11-ns -o yaml
 ```
 
 ## Maintainers
@@ -191,4 +141,3 @@ monitoring:
 
 - [LLAMATOR MCP Server](https://github.com/CSU-ITMO-2025-2/team11-llamator-mcp)
 - [Helm Documentation](https://helm.sh/docs/)
-- [Kubernetes Documentation](https://kubernetes.io/docs/)

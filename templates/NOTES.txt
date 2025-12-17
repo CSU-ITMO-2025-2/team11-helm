@@ -43,6 +43,48 @@ COMPONENTS DEPLOYED:
 {{- end }}
 
 **************************************************
+SECRETS MANAGEMENT:
+**************************************************
+
+{{- if .Values.externalSecrets.enabled }}
+✓ External Secrets Operator: ENABLED
+  - SecretStore: {{ .Values.externalSecrets.secretStoreName }} ({{ .Values.externalSecrets.secretStoreKind }})
+  - Vault Path: {{ .Values.externalSecrets.vaultPath }}
+  - Refresh: {{ .Values.externalSecrets.refreshInterval }}
+
+  ExternalSecrets created:
+  - {{ include "llamator-mcp.fullname" . }}-openai-keys → {{ .Values.security.openai.attack.secret.name }}
+  {{- if .Values.security.apiKey.enabled }}
+  - {{ include "llamator-mcp.fullname" . }}-api-key → {{ .Values.security.apiKey.existingSecret }}
+  {{- end }}
+  {{- if .Values.storage.s3.enabled }}
+  - {{ include "llamator-mcp.fullname" . }}-s3-keys → {{ .Values.storage.s3.existingSecret }}
+  {{- end }}
+
+  Vault secrets structure:
+    {{ .Values.externalSecrets.vaultPath }}/openai → OPENAI_API_KEY
+    {{ .Values.externalSecrets.vaultPath }}/api    → API_KEY
+    {{ .Values.externalSecrets.vaultPath }}/s3     → ACCESS_KEY_ID, SECRET_ACCESS_KEY
+
+{{- else }}
+⚠ External Secrets: DISABLED
+
+  You must create secrets manually:
+
+  kubectl create secret generic {{ .Values.security.openai.attack.secret.name }} \
+    --from-literal={{ .Values.security.openai.attack.secret.key }}='YOUR_API_KEY' \
+    --from-literal={{ .Values.security.openai.judge.secret.key }}='YOUR_API_KEY' \
+    --from-literal={{ .Values.security.openai.target.secret.key }}='YOUR_API_KEY' \
+    --namespace {{ include "llamator-mcp.namespace" . }}
+
+  {{- if .Values.security.apiKey.enabled }}
+  kubectl create secret generic {{ .Values.security.apiKey.existingSecret }} \
+    --from-literal={{ .Values.security.apiKey.secretKey }}='YOUR_SECURE_API_KEY' \
+    --namespace {{ include "llamator-mcp.namespace" . }}
+  {{- end }}
+{{- end }}
+
+**************************************************
 SECURITY:
 **************************************************
 
@@ -56,10 +98,12 @@ SECURITY:
 
 {{- if .Values.networkPolicy.enabled }}
 ✓ NetworkPolicy: Enabled
+{{- else }}
+✗ NetworkPolicy: Disabled
 {{- end }}
 
 {{- if .Values.security.apiKey.enabled }}
-⚠ API Key Authentication: ENABLED
+✓ API Key Authentication: ENABLED
   Secret: {{ .Values.security.apiKey.existingSecret }}
 {{- else }}
 ⚠ API Key Authentication: DISABLED (not recommended for production)
@@ -98,59 +142,55 @@ ACCESS INFORMATION:
 {{- end }}
 
 **************************************************
-SECRETS REQUIRED:
+VERIFY DEPLOYMENT:
 **************************************************
 
-⚠ IMPORTANT: You must create the following secrets manually:
+1. Check ExternalSecrets status:
+   kubectl get externalsecret -n {{ include "llamator-mcp.namespace" . }}
 
-1. OpenAI API Keys:
-   kubectl create secret generic {{ .Values.security.openai.attack.secret.name }} \
-     --from-literal={{ .Values.security.openai.attack.secret.key }}='YOUR_ATTACK_API_KEY' \
-     --from-literal={{ .Values.security.openai.judge.secret.key }}='YOUR_JUDGE_API_KEY' \
-     --from-literal={{ .Values.security.openai.target.secret.key }}='YOUR_TARGET_API_KEY' \
-     --namespace {{ include "llamator-mcp.namespace" . }}
+2. Check secrets created:
+   kubectl get secret -n {{ include "llamator-mcp.namespace" . }}
 
-{{- if .Values.security.apiKey.enabled }}
-2. API Key (for endpoint protection):
-   kubectl create secret generic {{ .Values.security.apiKey.existingSecret }} \
-     --from-literal={{ .Values.security.apiKey.secretKey }}='YOUR_SECURE_API_KEY' \
-     --namespace {{ include "llamator-mcp.namespace" . }}
-{{- end }}
+3. Check all resources:
+   kubectl get all -n {{ include "llamator-mcp.namespace" . }}
+
+4. Wait for pods to be ready:
+   kubectl wait --for=condition=ready pod \
+     -l app.kubernetes.io/name=llamator-mcp \
+     -n {{ include "llamator-mcp.namespace" . }} \
+     --timeout=300s
+
+5. Test API endpoint:
+   curl https://{{ (index .Values.ingress.hosts 0).host }}/health
 
 **************************************************
-MONITORING:
+VIEW LOGS:
 **************************************************
 
-Check deployment status:
-  kubectl get all -n {{ include "llamator-mcp.namespace" . }}
-
-View API logs:
+API logs:
   kubectl logs -n {{ include "llamator-mcp.namespace" . }} -l app.kubernetes.io/component=api -f
 
-View Worker logs:
+Worker logs:
   kubectl logs -n {{ include "llamator-mcp.namespace" . }} -l app.kubernetes.io/component=worker -f
 
-View Redis logs:
+Redis logs:
   kubectl logs -n {{ include "llamator-mcp.namespace" . }} -l app.kubernetes.io/component=redis -f
 
 **************************************************
-NEXT STEPS:
+TROUBLESHOOTING:
 **************************************************
 
-1. Create required secrets (see above)
-2. Wait for all pods to become ready:
-   kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=llamator-mcp -n {{ include "llamator-mcp.namespace" . }} --timeout=300s
-3. Test API endpoint:
-   curl https://{{ (index .Values.ingress.hosts 0).host }}/health
-4. Review logs for any errors
+If ExternalSecret fails:
+  kubectl describe externalsecret -n {{ include "llamator-mcp.namespace" . }}
+
+If pods fail to start:
+  kubectl describe pod -n {{ include "llamator-mcp.namespace" . }} -l app.kubernetes.io/name=llamator-mcp
 
 **************************************************
 DOCUMENTATION:
 **************************************************
 
-For more information:
 - Project: README.md
 - GitHub: https://github.com/CSU-ITMO-2025-2/team11-llamator-mcp
 
 **************************************************
-

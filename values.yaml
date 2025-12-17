@@ -66,9 +66,6 @@ api:
     # Storage for artifacts
     LLAMATOR_MCP_ARTIFACTS_ROOT: "/data/artifacts"
 
-    # Optional API auth for HTTP/MCP endpoints (empty = disabled)
-    LLAMATOR_MCP_API_KEY: ""
-
     # ARQ job timeout (seconds)
     LLAMATOR_MCP_RUN_TIMEOUT_SECONDS: "3600"
 
@@ -108,9 +105,6 @@ worker:
 
     # Storage for artifacts
     LLAMATOR_MCP_ARTIFACTS_ROOT: "/data/artifacts"
-
-    # Optional API auth for HTTP/MCP endpoints (empty = disabled)
-    LLAMATOR_MCP_API_KEY: ""
 
     # ARQ job timeout (seconds)
     LLAMATOR_MCP_RUN_TIMEOUT_SECONDS: "3600"
@@ -157,12 +151,20 @@ vault:
   secretStoreRef: "vault-team11"
   # Use SecretStore (namespace-scoped) instead of ClusterSecretStore
   secretStoreKind: "SecretStore"
-  # Vault secret path (KV v2 format with /data/)
-  secretPath: "kv/data/team11/llamator/openai"
-  # Property name in Vault secret
+  # Vault secret paths (KV v2 format with /data/)
+  openaiSecretPath: "kv/data/team11/llamator/openai"
+  apiSecretPath: "kv/data/team11/llamator/api"
+  # Property name in Vault secrets
   openaiKeyProperty: "OPENAI_API_KEY"
+  apiKeyProperty: "LLAMATOR_MCP_API_KEY"
   # How often to sync secrets from Vault
   refreshInterval: "1m"
+
+# API authentication key (for HTTP/MCP endpoints)
+apiKey:
+  secret:
+    name: "llamator-api-key"
+    key: "LLAMATOR_MCP_API_KEY"
 
 # OpenAI config: attack & target models separately
 openai:

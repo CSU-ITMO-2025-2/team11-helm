@@ -32,6 +32,13 @@ spec:
               value: {{ $value | quote }}
 {{- end }}
 
+            # API authentication key from Vault
+            - name: LLAMATOR_MCP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.apiKey.secret.name }}
+                  key: {{ .Values.apiKey.secret.key }}
+
             # OpenAI attack model (same config contract as API)
             - name: LLAMATOR_MCP_ATTACK_OPENAI_BASE_URL
               value: {{ .Values.openai.attack.baseUrl | quote }}

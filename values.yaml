@@ -149,6 +149,21 @@ artifactsVolume:
     # Ask your cluster admin for available storage classes
     storageClass: ""
 
+# Vault External Secrets configuration
+vault:
+  # Enable External Secrets Operator integration with Vault
+  enabled: true
+  # SecretStore name (must exist in namespace)
+  secretStoreRef: "vault-team11"
+  # Use SecretStore (namespace-scoped) instead of ClusterSecretStore
+  secretStoreKind: "SecretStore"
+  # Vault secret path (KV v2 format with /data/)
+  secretPath: "kv/data/team11/llamator/openai"
+  # Property name in Vault secret
+  openaiKeyProperty: "OPENAI_API_KEY"
+  # How often to sync secrets from Vault
+  refreshInterval: "1m"
+
 # OpenAI config: attack & target models separately
 openai:
   attack:

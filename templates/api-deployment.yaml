@@ -118,7 +118,9 @@ spec:
             {{- end }}
           {{- if .Values.api.livenessProbe.enabled }}
           livenessProbe:
-            {{- toYaml .Values.api.livenessProbe.httpGet | nindent 12 }}
+            httpGet:
+              path: {{ .Values.api.livenessProbe.httpGet.path }}
+              port: {{ .Values.api.livenessProbe.httpGet.port }}
             initialDelaySeconds: {{ .Values.api.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.api.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.api.livenessProbe.timeoutSeconds }}
@@ -126,7 +128,9 @@ spec:
           {{- end }}
           {{- if .Values.api.readinessProbe.enabled }}
           readinessProbe:
-            {{- toYaml .Values.api.readinessProbe.httpGet | nindent 12 }}
+            httpGet:
+              path: {{ .Values.api.readinessProbe.httpGet.path }}
+              port: {{ .Values.api.readinessProbe.httpGet.port }}
             initialDelaySeconds: {{ .Values.api.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.api.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.api.readinessProbe.timeoutSeconds }}

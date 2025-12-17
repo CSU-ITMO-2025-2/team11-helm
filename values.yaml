@@ -292,40 +292,39 @@ storage:
     secretAccessKeyKey: "S3_ACCESS_KEY"
 
 # -----------------------------------------------------------------------------
-# HashiCorp Vault Integration
+# External Secrets Operator (ESO) - для получения секретов из Vault
+# -----------------------------------------------------------------------------
+externalSecrets:
+  # Включить интеграцию с External Secrets Operator
+  enabled: true
+  
+  # Тип SecretStore (SecretStore - namespace-scoped, ClusterSecretStore - cluster-wide)
+  secretStoreKind: SecretStore
+  
+  # Имя ClusterSecretStore (должен быть уже создан в кластере)
+  secretStoreName: "vault-backend"
+  
+  # Базовый путь к секретам в Vault (KV v2: с /data/)
+  # Секреты:
+  #   {vaultPath}/openai - OPENAI_API_KEY
+  #   {vaultPath}/api    - API_KEY
+  #   {vaultPath}/s3     - ACCESS_KEY_ID, SECRET_ACCESS_KEY
+  vaultPath: "kv/data/team11/llamator"
+  
+  # Интервал обновления секретов из Vault
+  refreshInterval: "1m"
+
+# -----------------------------------------------------------------------------
+# HashiCorp Vault Agent Injector (альтернативный метод)
 # -----------------------------------------------------------------------------
 vault:
+  # Включить Vault Agent Injector
   enabled: false
-  address: "https://vault.example.com"
-  skipVerify: false
-  caCertSecret: ""
-  headers: {}
-  
-  # Vault Agent Injector (sidecar-based)
+  # Vault Agent Injector (sidecar-based) - если нужен прямой доступ к Vault
   agentInjector:
     enabled: false
     role: "llamator-mcp"
     secretPath: "secret/data/llamator-mcp"
-  
-  # Vault Secrets Operator (CRD-based)
-  # Supported auth methods: kubernetes, jwt, appRole (NOT userpass!)
-  vaultSecretsOperator:
-    enabled: false
-    # Auth method: kubernetes, jwt, or appRole
-    authMount: "kubernetes"
-    authMountPath: ""  # Custom mount path (default: same as authMount)
-    role: "llamator-mcp"
-    # For appRole auth
-    appRole:
-      roleId: ""
-      secretRef: "vault-approle-secret"
-      secretKey: "secret-id"
-    # General settings
-    mount: "secret"
-    secretPath: "llamator-mcp"
-    refreshAfter: "5m"
-    vaultConnectionRef: "vault-connection"
-    createConnection: true
 
 # -----------------------------------------------------------------------------
 # Service Account & RBAC
@@ -352,7 +351,7 @@ ingress:
   enabled: true
   className: "nginx"
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Wildcard сертификат уже есть - cert-manager не нужен
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
     - host: "llamator.kubepractice.ru"
@@ -360,7 +359,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: llamator-tls
+    - secretName: tls-secret  # Глобальный Wildcard сертификат (уже есть в namespace)
       hosts:
         - "llamator.kubepractice.ru"
 

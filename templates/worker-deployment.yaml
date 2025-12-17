@@ -98,7 +98,9 @@ spec:
             {{- end }}
           {{- if .Values.worker.livenessProbe.enabled }}
           livenessProbe:
-            {{- toYaml .Values.worker.livenessProbe.exec | nindent 12 }}
+            exec:
+              command:
+                {{- toYaml .Values.worker.livenessProbe.exec.command | nindent 16 }}
             initialDelaySeconds: {{ .Values.worker.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.worker.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.worker.livenessProbe.timeoutSeconds }}

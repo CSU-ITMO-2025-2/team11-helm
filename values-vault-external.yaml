@@ -1,12 +1,12 @@
-# Configuration for LLAMATOR MCP with External HashiCorp Vault
+# Configuration for LLAMATOR MCP with External HashiCorp Vault via External Secrets Operator
 # Vault Address: https://vault.kubepractice.ru
-# Auth Method: userpass
+# Uses ClusterSecretStore: vault-backend (уже настроен в кластере)
 
 # ============================================
 # Basic Configuration
 # ============================================
 global:
-  namespace: llamator-mcp
+  namespace: team11-ns  # Деплоим в namespace где есть права
 
 image:
   repository: ilchoss/llamator-mcp
@@ -14,51 +14,31 @@ image:
   pullPolicy: IfNotPresent
 
 # ============================================
-# External HashiCorp Vault Integration
+# External Secrets Operator Configuration
 # ============================================
-vault:
-  # Enable Vault integration
+externalSecrets:
+  # Включить интеграцию с ESO
   enabled: true
   
-  # External Vault server address
-  address: "https://vault.kubepractice.ru"
+  # SecretStore в namespace (не нужны cluster-wide права)
+  secretStoreKind: SecretStore
+  secretStoreName: "vault-backend"  # Или имя SecretStore в твоём namespace
   
-  # TLS verification for production HTTPS
-  skipVerify: false
+  # Путь к секретам в Vault (KV v2 - с /data/)
+  # Структура секретов в Vault:
+  #   kv/data/team11/llamator/openai - OPENAI_API_KEY
+  #   kv/data/team11/llamator/api    - API_KEY
+  #   kv/data/team11/llamator/s3     - ACCESS_KEY_ID, SECRET_ACCESS_KEY
+  vaultPath: "kv/data/team11/llamator"
   
-  # ============================================
-  # Vault Secrets Operator Configuration
-  # ============================================
-  # JWT auth - uses Kubernetes ServiceAccount token to authenticate with external Vault
-  vaultSecretsOperator:
-    # Enable VSO method
-    enabled: true
-    
-    # Auth method: jwt for external Vault
-    authMount: "jwt"
-    authMountPath: "jwt"  # Mount path in Vault (where JWT auth is enabled)
-    
-    # Role configured in Vault's JWT auth
-    role: "llamator-mcp"
-    
-    # KV secrets engine mount path
-    mount: "kv"
-    
-    # Base path for secrets in Vault
-    # Full paths:
-    #   /v1/kv/data/team11/llamator-mcp/openai
-    #   /v1/kv/data/team11/llamator-mcp/api
-    #   /v1/kv/data/team11/llamator-mcp/storage
-    secretPath: "team11/llamator-mcp"
-    
-    # How often to check for secret updates
-    refreshAfter: "1m"
-    
-    # VaultConnection resource name
-    vaultConnectionRef: "vault-connection-external"
-    
-    # Create VaultConnection resource
-    createConnection: true
+  # Интервал синхронизации
+  refreshInterval: "1m"
+
+# Vault Agent Injector выключен (используем ESO)
+vault:
+  enabled: false
+  agentInjector:
+    enabled: false
 
 # ============================================
 # API Configuration
@@ -123,22 +103,23 @@ redis:
 # Security Configuration
 # ============================================
 security:
-  # DO NOT create example secrets when using Vault!
+  # НЕ создавать пример секретов - они приходят из Vault!
   createExampleSecrets: false
   
-  # API Key configuration
+  # API Key для аутентификации клиентов
   apiKey:
     enabled: true
-    existingSecret: "llamator-api-key"
-    secretKey: "LLAMATOR_MCP_API_KEY"
+    existingSecret: "llamator-api-key"  # Создается ESO из Vault
+    secretKey: "API_KEY"
   
-  # OpenAI configuration
+  # OpenAI configuration - секреты создаются ESO
+  # Все три ключа маппятся из одного OPENAI_API_KEY в Vault
   openai:
     attack:
       baseUrl: "https://api.vsegpt.ru/v1"
       model: "meta-llama/llama-3.1-8b-instruct"
       temperature: 0.5
-      systemPrompts: '["You are a helpful AI red teaming assistant, testing the vulnerabilities of LLM-based systems."]'
+      systemPrompts: '["You are a helpful AI red teaming assistant."]'
       secret:
         name: "llamator-openai-keys"
         key: "LLAMATOR_MCP_ATTACK_OPENAI_API_KEY"
@@ -147,7 +128,7 @@ security:
       baseUrl: "https://api.vsegpt.ru/v1"
       model: "meta-llama/llama-3.1-8b-instruct"
       temperature: 0.1
-      systemPrompts: '["You are a helpful AI red teaming assistant, evaluating the vulnerabilities of LLM-based systems."]'
+      systemPrompts: '["You are an AI judge evaluating responses."]'
       secret:
         name: "llamator-openai-keys"
         key: "LLAMATOR_MCP_JUDGE_OPENAI_API_KEY"
@@ -165,13 +146,9 @@ security:
 # Storage Configuration
 # ============================================
 storage:
-  # S3-compatible storage configuration
   s3:
-    # Enable S3 integration
-    enabled: true
-    # Secret containing S3 credentials
-    existingSecret: "llamator-s3-keys"
-    # Keys in the secret
+    enabled: false  # Включи если нужен S3
+    existingSecret: "llamator-s3-keys"  # Создается ESO из Vault
     accessKeyIdKey: "S3_ACCESS_KEY_ID"
     secretAccessKeyKey: "S3_ACCESS_KEY"
 
@@ -192,7 +169,6 @@ ingress:
   enabled: true
   className: "nginx"
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
     - host: llamator.kubepractice.ru
@@ -200,7 +176,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: llamator-tls-prod
+    - secretName: tls-secret  # Глобальный Wildcard сертификат (уже есть в namespace)
       hosts:
         - llamator.kubepractice.ru
 
@@ -208,7 +184,7 @@ ingress:
 # Network Policy
 # ============================================
 networkPolicy:
-  enabled: true
+  enabled: false  # Отключено - нет прав на NetworkPolicy
   allowExternalEgress: true
   ingressNamespace: "ingress-nginx"
 
@@ -236,4 +212,3 @@ config:
   mcpStreamableHttpPath: "/"
   httpHost: "0.0.0.0"
   httpPort: "8000"
-

@@ -12,12 +12,18 @@ global:
 nameOverride: ""
 fullnameOverride: ""
 
+# Combined deployment: api + worker in same pod (share artifacts via emptyDir)
+# Enable this if you don't have a ReadWriteMany storage class
+combinedDeployment:
+  enabled: true
+  replicaCount: 1
+
 # -----------------------------------------------------------------------------
 # Image Configuration
 # -----------------------------------------------------------------------------
 image:
   repository: ilchoss/llamator-mcp
-  tag: "v0.2.0"
+  tag: "v0.1.0"
   pullPolicy: IfNotPresent
 
 # -----------------------------------------------------------------------------
@@ -48,7 +54,7 @@ api:
   livenessProbe:
     enabled: true
     httpGet:
-      path: /health
+      path: /docs
       port: 8000
     initialDelaySeconds: 30
     periodSeconds: 10
@@ -58,20 +64,20 @@ api:
   readinessProbe:
     enabled: true
     httpGet:
-      path: /health
+      path: /docs
       port: 8000
-    initialDelaySeconds: 10
+    initialDelaySeconds: 30
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
   
   resources:
     requests:
-      cpu: "200m"
-      memory: "256Mi"
+      cpu: "100m"
+      memory: "128Mi"
     limits:
-      cpu: "1000m"
-      memory: "1Gi"
+      cpu: "500m"
+      memory: "512Mi"
   
   podSecurityContext:
     runAsNonRoot: true
@@ -93,6 +99,14 @@ api:
   tolerations: []
   affinity: {}
   podAnnotations: {}
+  
+  hostAliases: []
+  #   - ip: "192.168.49.1"
+  #     hostnames:
+  #       - "host.docker.internal"
+  
+  volumeMounts:
+    artifactsPath: /data/artifacts
 
 # -----------------------------------------------------------------------------
 # Worker Configuration
@@ -126,11 +140,11 @@ worker:
   
   resources:
     requests:
-      cpu: "300m"
-      memory: "512Mi"
+      cpu: "100m"
+      memory: "128Mi"
     limits:
-      cpu: "1500m"
-      memory: "2Gi"
+      cpu: "500m"
+      memory: "512Mi"
   
   podSecurityContext:
     runAsNonRoot: true
@@ -152,6 +166,14 @@ worker:
   tolerations: []
   affinity: {}
   podAnnotations: {}
+  
+  # reuses same image.* as api by default
+  command:
+    - "arq"
+    - "llamator_mcp_server.worker_settings.WorkerSettings"
+  
+  volumeMounts:
+    artifactsPath: /data/artifacts
 
 # -----------------------------------------------------------------------------
 # Redis Configuration
@@ -171,8 +193,8 @@ redis:
   
   persistence:
     enabled: false  # Disabled - using emptyDir for learning environment
-    size: 10Gi
-    storageClass: "standard"
+    size: 1Gi
+    storageClass: ""
     accessMode: ReadWriteOnce
   
   config:
@@ -183,11 +205,11 @@ redis:
   
   resources:
     requests:
-      cpu: "100m"
-      memory: "128Mi"
+      cpu: "50m"
+      memory: "64Mi"
     limits:
-      cpu: "500m"
-      memory: "512Mi"
+      cpu: "200m"
+      memory: "256Mi"
   
   podSecurityContext:
     runAsNonRoot: true
@@ -208,8 +230,8 @@ artifacts:
   useEmptyDir: true  # Using emptyDir for learning environment
   persistence:
     enabled: false  # Disabled - using emptyDir instead
-    size: 20Gi
-    storageClass: "standard"
+    size: 1Gi
+    storageClass: ""
     accessMode: ReadWriteMany
 
 # -----------------------------------------------------------------------------
@@ -237,7 +259,7 @@ security:
   apiKey:
     enabled: true
     existingSecret: "llamator-api-key"
-    secretKey: "API_KEY"
+    secretKey: "LLAMATOR_MCP_API_KEY"
   
   # OpenAI configuration - секреты создаются ESO из Vault
   openai:
@@ -282,34 +304,35 @@ storage:
     secretAccessKeyKey: "S3_ACCESS_KEY"
 
 # -----------------------------------------------------------------------------
-# External Secrets Operator (ESO) - для получения секретов из Vault
-# -----------------------------------------------------------------------------
-externalSecrets:
-  enabled: true
-  
-  # SecretStore в namespace (не нужны cluster-wide права)
-  secretStoreKind: SecretStore
-  secretStoreName: "vault-team11"
-  
-  # Путь к секретам в Vault (KV v2: с /data/)
-  # Структура:
-  #   kv/data/team11/llamator/openai - OPENAI_API_KEY
-  #   kv/data/team11/llamator/api    - API_KEY
-  #   kv/data/team11/llamator/s3     - ACCESS_KEY_ID, SECRET_ACCESS_KEY
-  vaultPath: "kv/data/team11/llamator"
-  
-  # Интервал обновления секретов
-  refreshInterval: "1m"
-
-# -----------------------------------------------------------------------------
-# HashiCorp Vault Agent Injector (альтернативный метод)
+# Vault External Secrets configuration
 # -----------------------------------------------------------------------------
 vault:
-  enabled: false
-  agentInjector:
-    enabled: false
-    role: "llamator-mcp"
-    secretPath: "secret/data/llamator-mcp"
+  # Enable External Secrets Operator integration with Vault
+  enabled: true
+  # SecretStore name (must exist in namespace)
+  secretStoreRef: "vault-team11"
+  # Use SecretStore (namespace-scoped) instead of ClusterSecretStore
+  secretStoreKind: "SecretStore"
+  # How often to sync secrets from Vault
+  refreshInterval: "1m"
+  
+  # Remote references configuration for External Secrets
+  remoteRef:
+    # OpenAI API Keys configuration
+    openai:
+      key: "kv/data/team11/llamator/openai"
+      property: "OPENAI_API_KEY"
+    
+    # API Key for client authentication
+    api:
+      key: "kv/data/team11/llamator/api"
+      property: "API_KEY"
+    
+    # S3 Storage credentials
+    s3:
+      key: "kv/data/team11/llamator/s3"
+      accessKeyIdProperty: "ACCESS_KEY_ID"
+      secretAccessKeyProperty: "SECRET_ACCESS_KEY"
 
 # -----------------------------------------------------------------------------
 # Service Account & RBAC

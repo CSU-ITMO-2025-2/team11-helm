@@ -6,26 +6,22 @@
 # Global Configuration
 # -----------------------------------------------------------------------------
 global:
-  namespace: team11-ns  # Namespace с правами
+  namespace: team11-ns # Namespace с правами
   imagePullSecrets: []
-
 nameOverride: ""
 fullnameOverride: ""
-
 # Combined deployment: api + worker in same pod (share artifacts via emptyDir)
 # Enable this if you don't have a ReadWriteMany storage class
 combinedDeployment:
   enabled: true
   replicaCount: 1
-
 # -----------------------------------------------------------------------------
 # Image Configuration
 # -----------------------------------------------------------------------------
 image:
   repository: ilchoss/llamator-mcp
-  tag: "v0.1.0"
+  tag: "sha-43febdc"
   pullPolicy: IfNotPresent
-
 # -----------------------------------------------------------------------------
 # API Server Configuration
 # -----------------------------------------------------------------------------
@@ -33,24 +29,20 @@ api:
   enabled: true
   replicaCount: 1
   containerPort: 8000
-  
   service:
     type: ClusterIP
     port: 8000
     targetPort: 8000
     annotations: {}
-  
   autoscaling:
-    enabled: false  # Disabled to stay within 3 CPU / 6 GiB quota
+    enabled: false # Disabled to stay within 3 CPU / 6 GiB quota
     minReplicas: 1
     maxReplicas: 1
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80
-  
   podDisruptionBudget:
     enabled: false
     minAvailable: 1
-  
   livenessProbe:
     enabled: true
     httpGet:
@@ -60,7 +52,6 @@ api:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  
   readinessProbe:
     enabled: true
     httpGet:
@@ -70,7 +61,6 @@ api:
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
-  
   resources:
     requests:
       cpu: "100m"
@@ -78,54 +68,45 @@ api:
     limits:
       cpu: "500m"
       memory: "512Mi"
-  
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 1000
     fsGroup: 1000
-  
   securityContext:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: false
     capabilities:
       drop:
         - ALL
-  
   podAntiAffinity:
     enabled: false
     topologyKey: kubernetes.io/hostname
-  
   nodeSelector: {}
   tolerations: []
   affinity: {}
   podAnnotations: {}
-  
   hostAliases: []
   #   - ip: "192.168.49.1"
   #     hostnames:
   #       - "host.docker.internal"
-  
+
   volumeMounts:
     artifactsPath: /data/artifacts
-
 # -----------------------------------------------------------------------------
 # Worker Configuration
 # -----------------------------------------------------------------------------
 worker:
   enabled: true
   replicaCount: 1
-  
   autoscaling:
-    enabled: false  # Disabled to stay within 3 CPU / 6 GiB quota
+    enabled: false # Disabled to stay within 3 CPU / 6 GiB quota
     minReplicas: 1
     maxReplicas: 1
     targetCPUUtilizationPercentage: 75
     targetMemoryUtilizationPercentage: 80
-  
   podDisruptionBudget:
     enabled: false
     minAvailable: 1
-  
   livenessProbe:
     enabled: false
     exec:
@@ -137,7 +118,6 @@ worker:
     periodSeconds: 30
     timeoutSeconds: 10
     failureThreshold: 3
-  
   resources:
     requests:
       cpu: "100m"
@@ -145,64 +125,52 @@ worker:
     limits:
       cpu: "500m"
       memory: "512Mi"
-  
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 1000
     fsGroup: 1000
-  
   securityContext:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: false
     capabilities:
       drop:
         - ALL
-  
   podAntiAffinity:
     enabled: false
     topologyKey: kubernetes.io/hostname
-  
   nodeSelector: {}
   tolerations: []
   affinity: {}
   podAnnotations: {}
-  
   # reuses same image.* as api by default
   command:
     - "arq"
     - "llamator_mcp_server.worker_settings.WorkerSettings"
-  
   volumeMounts:
     artifactsPath: /data/artifacts
-
 # -----------------------------------------------------------------------------
 # Redis Configuration
 # -----------------------------------------------------------------------------
 redis:
   enabled: true
-  
   image:
     repository: redis
     tag: "7.4-alpine"
     pullPolicy: IfNotPresent
-  
   service:
     type: ClusterIP
     port: 6379
     targetPort: 6379
-  
   persistence:
-    enabled: false  # Disabled - using emptyDir for learning environment
+    enabled: false # Disabled - using emptyDir for learning environment
     size: 1Gi
     storageClass: ""
     accessMode: ReadWriteOnce
-  
   config:
     appendonly: "yes"
     appendfsync: "everysec"
     maxmemory: ""
     maxmemory_policy: ""
-  
   resources:
     requests:
       cpu: "50m"
@@ -210,57 +178,50 @@ redis:
     limits:
       cpu: "200m"
       memory: "256Mi"
-  
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 999
     fsGroup: 999
-  
   securityContext:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: false
     capabilities:
       drop:
         - ALL
-
 # -----------------------------------------------------------------------------
 # Artifacts Storage Configuration
 # -----------------------------------------------------------------------------
 artifacts:
-  useEmptyDir: true  # Using emptyDir for learning environment
+  useEmptyDir: true # Using emptyDir for learning environment
   persistence:
-    enabled: false  # Disabled - using emptyDir instead
+    enabled: false # Disabled - using emptyDir instead
     size: 1Gi
     storageClass: ""
     accessMode: ReadWriteMany
-
 # -----------------------------------------------------------------------------
 # Application Configuration
 # -----------------------------------------------------------------------------
 config:
   logLevel: "INFO"
   uvicornLogLevel: "info"
-  jobTtlSeconds: 604800  # 7 days
-  runTimeoutSeconds: 3600  # 1 hour
+  jobTtlSeconds: 604800 # 7 days
+  runTimeoutSeconds: 3600 # 1 hour
   reportLanguage: "ru"
   httpHost: "0.0.0.0"
   httpPort: "8000"
   mcpMountPath: "/mcp"
   mcpStreamableHttpPath: "/"
-
 # -----------------------------------------------------------------------------
 # Security Configuration
 # -----------------------------------------------------------------------------
 security:
   # НЕ создавать пример секретов - они приходят из Vault
   createExampleSecrets: false
-  
   # API Key для аутентификации клиентов
   apiKey:
     enabled: true
     existingSecret: "llamator-api-key"
     secretKey: "LLAMATOR_MCP_API_KEY"
-  
   # OpenAI configuration - секреты создаются ESO из Vault
   openai:
     attack:
@@ -271,7 +232,6 @@ security:
       secret:
         name: "llamator-openai-keys"
         key: "LLAMATOR_MCP_ATTACK_OPENAI_API_KEY"
-    
     judge:
       baseUrl: "https://api.vsegpt.ru/v1"
       model: "meta-llama/llama-3.1-8b-instruct"
@@ -280,7 +240,6 @@ security:
       secret:
         name: "llamator-openai-keys"
         key: "LLAMATOR_MCP_JUDGE_OPENAI_API_KEY"
-    
     target:
       baseUrl: "https://api.vsegpt.ru/v1"
       model: "meta-llama/llama-3.1-8b-instruct"
@@ -289,7 +248,6 @@ security:
       secret:
         name: "llamator-openai-keys"
         key: "LLAMATOR_MCP_TARGET_OPENAI_API_KEY"
-
 # -----------------------------------------------------------------------------
 # S3 Storage Configuration
 # -----------------------------------------------------------------------------
@@ -302,7 +260,6 @@ storage:
     existingSecret: "llamator-s3-keys"
     accessKeyIdKey: "S3_ACCESS_KEY_ID"
     secretAccessKeyKey: "S3_ACCESS_KEY"
-
 # -----------------------------------------------------------------------------
 # Vault External Secrets configuration
 # -----------------------------------------------------------------------------
@@ -315,25 +272,21 @@ vault:
   secretStoreKind: "SecretStore"
   # How often to sync secrets from Vault
   refreshInterval: "1m"
-  
   # Remote references configuration for External Secrets
   remoteRef:
     # OpenAI API Keys configuration
     openai:
       key: "kv/data/team11/llamator/openai"
       property: "OPENAI_API_KEY"
-    
     # API Key for client authentication
     api:
       key: "kv/data/team11/llamator/api"
       property: "API_KEY"
-    
     # S3 Storage credentials
     s3:
       key: "kv/data/team11/llamator/s3"
       accessKeyIdProperty: "ACCESS_KEY_ID"
       secretAccessKeyProperty: "SECRET_ACCESS_KEY"
-
 # -----------------------------------------------------------------------------
 # Service Account & RBAC
 # -----------------------------------------------------------------------------
@@ -341,7 +294,6 @@ serviceAccount:
   create: true
   name: "llamator-mcp-sa"
   annotations: {}
-
 rbac:
   create: true
   rules:
@@ -351,7 +303,6 @@ rbac:
     - apiGroups: [""]
       resources: ["secrets"]
       verbs: ["get"]
-
 # -----------------------------------------------------------------------------
 # Ingress Configuration
 # -----------------------------------------------------------------------------
@@ -366,19 +317,17 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: tls-secret  # Wildcard сертификат (уже есть в namespace)
+    - secretName: tls-secret # Wildcard сертификат (уже есть в namespace)
       hosts:
         - "llamator.kubepractice.ru"
-
 # -----------------------------------------------------------------------------
 # Network Policy
 # -----------------------------------------------------------------------------
 networkPolicy:
-  enabled: false  # Отключено - нет прав
+  enabled: false # Отключено - нет прав
   allowExternalEgress: true
   ingressNamespace: "ingress-nginx"
   egressRules: []
-
 # -----------------------------------------------------------------------------
 # Monitoring
 # -----------------------------------------------------------------------------
@@ -393,12 +342,10 @@ monitoring:
     tlsConfig: {}
     relabelings: []
     metricRelabelings: []
-  
   podAnnotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "8000"
     prometheus.io/path: "/metrics"
-
 # -----------------------------------------------------------------------------
 # Resource Quotas
 # -----------------------------------------------------------------------------
@@ -418,7 +365,6 @@ resourceQuota:
     configmaps: "20"
   scopeSelector: {}
   scopes: []
-
 # -----------------------------------------------------------------------------
 # Limit Range
 # -----------------------------------------------------------------------------
@@ -449,7 +395,6 @@ limitRange:
     min:
       cpu: ""
       memory: ""
-
 # -----------------------------------------------------------------------------
 # Extra Configuration
 # -----------------------------------------------------------------------------

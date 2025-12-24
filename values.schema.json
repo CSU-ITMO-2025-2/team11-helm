@@ -166,6 +166,10 @@
         "openai": {
           "type": "object",
           "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable OpenAI API keys from secrets"
+            },
             "attack": {
               "type": "object",
               "required": ["baseUrl", "model", "secret"],

@@ -46,10 +46,9 @@ vault:
     
     # Base path for secrets in Vault
     # Full paths:
-    #   /v1/kv/data/team11/llamator-mcp/openai
-    #   /v1/kv/data/team11/llamator-mcp/api
-    #   /v1/kv/data/team11/llamator-mcp/storage
-    secretPath: "team11/llamator-mcp"
+    #   /v1/kv/data/team11/llamator/openai
+    #   /v1/kv/data/team11/llamator/s3
+    secretPath: "team11/llamator"
     
     # How often to check for secret updates
     refreshAfter: "1m"
@@ -134,6 +133,7 @@ security:
   
   # OpenAI configuration
   openai:
+    enabled: true  # Enable OpenAI secrets from Vault
     attack:
       baseUrl: "https://api.vsegpt.ru/v1"
       model: "meta-llama/llama-3.1-8b-instruct"

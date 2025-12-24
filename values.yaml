@@ -253,7 +253,9 @@ security:
     secretKey: "LLAMATOR_MCP_API_KEY"
   
   # OpenAI configuration for attack, judge, and target models
+  # Set enabled: true when secrets are available (manually created or via Vault)
   openai:
+    enabled: true  # Secrets will be pulled from Vault
     attack:
       baseUrl: "https://api.vsegpt.ru/v1"
       model: "meta-llama/llama-3.1-8b-instruct"
@@ -286,7 +288,7 @@ security:
 # -----------------------------------------------------------------------------
 storage:
   s3:
-    enabled: true
+    enabled: true  # Secrets will be pulled from Vault
     # S3 endpoint URL (для reg.ru, AWS, MinIO и т.д.)
     endpoint: "https://s3.regru.cloud"
     bucket: "team11"
@@ -300,8 +302,8 @@ storage:
 # HashiCorp Vault Integration
 # -----------------------------------------------------------------------------
 vault:
-  enabled: false
-  address: "https://vault.example.com"
+  enabled: true
+  address: "https://vault.kubepractice.ru"
   skipVerify: false
   caCertSecret: ""
   headers: {}
@@ -315,10 +317,10 @@ vault:
   # Vault Secrets Operator (CRD-based)
   # Supported auth methods: kubernetes, jwt, appRole (NOT userpass!)
   vaultSecretsOperator:
-    enabled: false
+    enabled: true
     # Auth method: kubernetes, jwt, or appRole
-    authMount: "kubernetes"
-    authMountPath: ""  # Custom mount path (default: same as authMount)
+    authMount: "jwt"
+    authMountPath: "jwt"  # Mount path in Vault
     role: "llamator-mcp"
     # For appRole auth
     appRole:
@@ -326,9 +328,9 @@ vault:
       secretRef: "vault-approle-secret"
       secretKey: "secret-id"
     # General settings
-    mount: "secret"
-    secretPath: "llamator-mcp"
-    refreshAfter: "5m"
+    mount: "kv"
+    secretPath: "team11/llamator"
+    refreshAfter: "1m"
     vaultConnectionRef: "vault-connection"
     createConnection: true
 

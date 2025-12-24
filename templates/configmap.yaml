@@ -30,6 +30,7 @@ data:
   LLAMATOR_MCP_MCP_STREAMABLE_HTTP_PATH: {{ .Values.config.mcpStreamableHttpPath | quote }}
   
   # OpenAI models configuration (non-sensitive)
+  {{- if .Values.security.openai.enabled }}
   LLAMATOR_MCP_ATTACK_OPENAI_BASE_URL: {{ .Values.security.openai.attack.baseUrl | quote }}
   LLAMATOR_MCP_ATTACK_OPENAI_MODEL: {{ .Values.security.openai.attack.model | quote }}
   LLAMATOR_MCP_ATTACK_OPENAI_TEMPERATURE: {{ .Values.security.openai.attack.temperature | quote }}
@@ -44,6 +45,7 @@ data:
   LLAMATOR_MCP_TARGET_OPENAI_MODEL: {{ .Values.security.openai.target.model | quote }}
   LLAMATOR_MCP_TARGET_OPENAI_TEMPERATURE: {{ .Values.security.openai.target.temperature | quote }}
   LLAMATOR_MCP_TARGET_OPENAI_SYSTEM_PROMPTS: {{ .Values.security.openai.target.systemPrompts | quote }}
+  {{- end }}
   
   {{- if .Values.storage.s3.enabled }}
   # S3 Storage configuration

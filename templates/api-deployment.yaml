@@ -18,25 +18,6 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- if and .Values.vault.enabled .Values.vault.agentInjector.enabled }}
-        # Vault Agent Injector annotations
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: {{ .Values.vault.agentInjector.role | quote }}
-        vault.hashicorp.com/agent-inject-secret-openai-keys: {{ .Values.vault.agentInjector.secretPath }}/openai
-        vault.hashicorp.com/agent-inject-template-openai-keys: |
-          {{`{{- with secret `}}"{{ .Values.vault.agentInjector.secretPath }}/openai"{{` -}}
-          export LLAMATOR_MCP_ATTACK_OPENAI_API_KEY="{{ .Data.data.LLAMATOR_MCP_ATTACK_OPENAI_API_KEY }}"
-          export LLAMATOR_MCP_JUDGE_OPENAI_API_KEY="{{ .Data.data.LLAMATOR_MCP_JUDGE_OPENAI_API_KEY }}"
-          export LLAMATOR_MCP_TARGET_OPENAI_API_KEY="{{ .Data.data.LLAMATOR_MCP_TARGET_OPENAI_API_KEY }}"
-          {{- end }}`}}
-        {{- if .Values.security.apiKey.enabled }}
-        vault.hashicorp.com/agent-inject-secret-api-key: {{ .Values.vault.agentInjector.secretPath }}/api
-        vault.hashicorp.com/agent-inject-template-api-key: |
-          {{`{{- with secret `}}"{{ .Values.vault.agentInjector.secretPath }}/api"{{` -}}
-          export LLAMATOR_MCP_API_KEY="{{ .Data.data.api_key }}"
-          {{- end }}`}}
-        {{- end }}
-        {{- end }}
         {{- with .Values.api.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -53,6 +34,27 @@ spec:
       serviceAccountName: {{ include "llamator-mcp.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.api.podSecurityContext | nindent 8 }}
+      {{- if .Values.redis.enabled }}
+      initContainers:
+        - name: wait-for-redis
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z {{ include "llamator-mcp.redis.fullname" . }} {{ .Values.redis.service.port }}; do
+                echo "Waiting for Redis to be ready..."
+                sleep 2
+              done
+              echo "Redis is ready!"
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "16Mi"
+            limits:
+              cpu: "50m"
+              memory: "32Mi"
+      {{- end }}
       containers:
         - name: api
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -104,6 +106,18 @@ spec:
             {{- end }}
             # S3 Storage credentials
             {{- if .Values.storage.s3.enabled }}
+            {{- if .Values.storage.s3.endpoint }}
+            - name: S3_ENDPOINT_URL
+              value: {{ .Values.storage.s3.endpoint | quote }}
+            {{- end }}
+            {{- if .Values.storage.s3.bucket }}
+            - name: S3_BUCKET
+              value: {{ .Values.storage.s3.bucket | quote }}
+            {{- end }}
+            {{- if .Values.storage.s3.region }}
+            - name: S3_REGION
+              value: {{ .Values.storage.s3.region | quote }}
+            {{- end }}
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -120,7 +134,9 @@ spec:
             {{- end }}
           {{- if .Values.api.livenessProbe.enabled }}
           livenessProbe:
-            {{- toYaml .Values.api.livenessProbe.httpGet | nindent 12 }}
+            httpGet:
+              path: {{ .Values.api.livenessProbe.httpGet.path }}
+              port: {{ .Values.api.livenessProbe.httpGet.port }}
             initialDelaySeconds: {{ .Values.api.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.api.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.api.livenessProbe.timeoutSeconds }}
@@ -128,7 +144,9 @@ spec:
           {{- end }}
           {{- if .Values.api.readinessProbe.enabled }}
           readinessProbe:
-            {{- toYaml .Values.api.readinessProbe.httpGet | nindent 12 }}
+            httpGet:
+              path: {{ .Values.api.readinessProbe.httpGet.path }}
+              port: {{ .Values.api.readinessProbe.httpGet.port }}
             initialDelaySeconds: {{ .Values.api.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.api.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.api.readinessProbe.timeoutSeconds }}

@@ -105,10 +105,17 @@ Redis host
 {{- end }}
 
 {{/*
+Redis host (short name for better DNS resolution)
+*/}}
+{{- define "llamator-mcp.redis.host.short" -}}
+{{- include "llamator-mcp.redis.fullname" . }}
+{{- end }}
+
+{{/*
 Redis DSN
 */}}
 {{- define "llamator-mcp.redis.dsn" -}}
-{{- printf "redis://%s:%d/0" (include "llamator-mcp.redis.host" .) (int .Values.redis.service.port) }}
+{{- printf "redis://%s:%d/0" (include "llamator-mcp.redis.host.short" .) (int .Values.redis.service.port) }}
 {{- end }}
 
 {{/*

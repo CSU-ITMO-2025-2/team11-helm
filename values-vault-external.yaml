@@ -14,50 +14,42 @@ image:
   pullPolicy: IfNotPresent
 
 # ============================================
-# External HashiCorp Vault Integration
+# External Secrets Operator with Vault
 # ============================================
 vault:
-  # Enable Vault integration
+  # Enable External Secrets Operator integration
   enabled: true
   
-  # External Vault server address
-  address: "https://vault.kubepractice.ru"
+  # SecretStore name (must exist in namespace)
+  # Create with: kubectl apply -f secretstore-vault.yaml
+  secretStoreRef: "vault-team11"
   
-  # TLS verification for production HTTPS
-  skipVerify: false
+  # Use SecretStore (namespace-scoped) instead of ClusterSecretStore
+  secretStoreKind: "SecretStore"
   
-  # ============================================
-  # Vault Secrets Operator Configuration
-  # ============================================
-  # JWT auth - uses Kubernetes ServiceAccount token to authenticate with external Vault
-  vaultSecretsOperator:
-    # Enable VSO method
-    enabled: true
-    
-    # Auth method: jwt for external Vault
-    authMount: "jwt"
-    authMountPath: "jwt"  # Mount path in Vault (where JWT auth is enabled)
-    
-    # Role configured in Vault's JWT auth
-    role: "llamator-mcp"
-    
-    # KV secrets engine mount path
-    mount: "kv"
-    
-    # Base path for secrets in Vault
-    # Full paths:
-    #   /v1/kv/data/team11/llamator/openai
-    #   /v1/kv/data/team11/llamator/s3
-    secretPath: "team11/llamator"
-    
-    # How often to check for secret updates
-    refreshAfter: "1m"
-    
-    # VaultConnection resource name
-    vaultConnectionRef: "vault-connection-external"
-    
-    # Create VaultConnection resource
-    createConnection: true
+  # How often to sync secrets from Vault
+  refreshInterval: "1m"
+  
+  # Base path for secrets in Vault (for documentation)
+  # Full paths in Vault UI: kv/team11/llamator/*
+  secretPath: "team11/llamator"
+  
+  # Remote references configuration for External Secrets
+  # Paths are relative to Vault KV mount (without "kv/data/" prefix)
+  remoteRef:
+    # OpenAI API Keys
+    openai:
+      key: "team11/llamator/openai"
+      property: "OPENAI_API_KEY"
+    # API Key for client authentication  
+    api:
+      key: "team11/llamator/api"
+      property: "API_KEY"
+    # S3 Storage credentials
+    s3:
+      key: "team11/llamator/s3"
+      accessKeyIdProperty: "ACCESS_KEY_ID"
+      secretAccessKeyProperty: "SECRET_ACCESS_KEY"
 
 # ============================================
 # API Configuration

@@ -18,18 +18,6 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- if and .Values.vault.enabled .Values.vault.agentInjector.enabled }}
-        # Vault Agent Injector annotations
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: {{ .Values.vault.agentInjector.role | quote }}
-        vault.hashicorp.com/agent-inject-secret-openai-keys: {{ .Values.vault.agentInjector.secretPath }}/openai
-        vault.hashicorp.com/agent-inject-template-openai-keys: |
-          {{`{{- with secret `}}"{{ .Values.vault.agentInjector.secretPath }}/openai"{{` -}}
-          export LLAMATOR_MCP_ATTACK_OPENAI_API_KEY="{{ .Data.data.LLAMATOR_MCP_ATTACK_OPENAI_API_KEY }}"
-          export LLAMATOR_MCP_JUDGE_OPENAI_API_KEY="{{ .Data.data.LLAMATOR_MCP_JUDGE_OPENAI_API_KEY }}"
-          export LLAMATOR_MCP_TARGET_OPENAI_API_KEY="{{ .Data.data.LLAMATOR_MCP_TARGET_OPENAI_API_KEY }}"
-          {{- end }}`}}
-        {{- end }}
         {{- with .Values.worker.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -84,6 +72,18 @@ spec:
             {{- end }}
             # S3 Storage credentials
             {{- if .Values.storage.s3.enabled }}
+            {{- if .Values.storage.s3.endpoint }}
+            - name: S3_ENDPOINT_URL
+              value: {{ .Values.storage.s3.endpoint | quote }}
+            {{- end }}
+            {{- if .Values.storage.s3.bucket }}
+            - name: S3_BUCKET
+              value: {{ .Values.storage.s3.bucket | quote }}
+            {{- end }}
+            {{- if .Values.storage.s3.region }}
+            - name: S3_REGION
+              value: {{ .Values.storage.s3.region | quote }}
+            {{- end }}
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -100,7 +100,9 @@ spec:
             {{- end }}
           {{- if .Values.worker.livenessProbe.enabled }}
           livenessProbe:
-            {{- toYaml .Values.worker.livenessProbe.exec | nindent 12 }}
+            exec:
+              command:
+                {{- toYaml .Values.worker.livenessProbe.exec.command | nindent 16 }}
             initialDelaySeconds: {{ .Values.worker.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.worker.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.worker.livenessProbe.timeoutSeconds }}

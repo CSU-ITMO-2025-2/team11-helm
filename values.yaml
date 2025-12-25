@@ -20,8 +20,8 @@ combinedDeployment:
 # -----------------------------------------------------------------------------
 image:
   repository: ilchoss/llamator-mcp
-  tag: "latest"
-  pullPolicy: Always
+  tag: "v0.1.0"
+  pullPolicy: IfNotPresent
 # -----------------------------------------------------------------------------
 # API Server Configuration
 # -----------------------------------------------------------------------------

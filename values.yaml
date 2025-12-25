@@ -220,7 +220,7 @@ security:
   # API Key для аутентификации клиентов
   apiKey:
     enabled: true
-    existingSecret: "llamator-api-key"
+    existingSecret: "llamator-mcp-auto-api-key"
     secretKey: "LLAMATOR_MCP_API_KEY"
   
   # OpenAI configuration - secrets are created by ESO from Vault
@@ -232,7 +232,7 @@ security:
       temperature: 0.5
       systemPrompts: '["You are a helpful AI red teaming assistant."]'
       secret:
-        name: "llamator-openai-keys"
+        name: "llamator-mcp-auto-openai-keys"
         key: "LLAMATOR_MCP_ATTACK_OPENAI_API_KEY"
     judge:
       baseUrl: "https://api.vsegpt.ru/v1"
@@ -240,7 +240,7 @@ security:
       temperature: 0.1
       systemPrompts: '["You are an AI judge evaluating responses."]'
       secret:
-        name: "llamator-openai-keys"
+        name: "llamator-mcp-auto-openai-keys"
         key: "LLAMATOR_MCP_JUDGE_OPENAI_API_KEY"
     target:
       baseUrl: "https://api.vsegpt.ru/v1"
@@ -248,7 +248,7 @@ security:
       temperature: 0.7
       systemPrompts: '["You are a helpful assistant."]'
       secret:
-        name: "llamator-openai-keys"
+        name: "llamator-mcp-auto-openai-keys"
         key: "LLAMATOR_MCP_TARGET_OPENAI_API_KEY"
 # -----------------------------------------------------------------------------
 # S3 Storage Configuration
@@ -259,7 +259,7 @@ storage:
     endpoint: "https://s3.regru.cloud"
     bucket: "team11"
     region: ""
-    existingSecret: "llamator-s3-keys"
+    existingSecret: "llamator-mcp-auto-s3-keys"
     accessKeyIdKey: "S3_ACCESS_KEY_ID"
     secretAccessKeyKey: "S3_ACCESS_KEY"
 # -----------------------------------------------------------------------------

@@ -20,7 +20,7 @@ combinedDeployment:
 # -----------------------------------------------------------------------------
 image:
   repository: ghcr.io/csu-itmo-2025-2/team11-llamator-mcp
-  tag: "v0.1.0"
+  tag: "sha-9192230"
   pullPolicy: IfNotPresent
 # -----------------------------------------------------------------------------
 # API Server Configuration
@@ -222,10 +222,9 @@ security:
     enabled: true
     existingSecret: "llamator-mcp-auto-api-key"
     secretKey: "LLAMATOR_MCP_API_KEY"
-  
   # OpenAI configuration - secrets are created by ESO from Vault
   openai:
-    enabled: true  # Secrets will be pulled from Vault
+    enabled: true # Secrets will be pulled from Vault
     attack:
       baseUrl: "https://api.vsegpt.ru/v1"
       model: "meta-llama/llama-3.1-8b-instruct"
@@ -255,7 +254,7 @@ security:
 # -----------------------------------------------------------------------------
 storage:
   s3:
-    enabled: true  # Secrets will be pulled from Vault
+    enabled: true # Secrets will be pulled from Vault
     endpoint: "https://s3.regru.cloud"
     bucket: "team11"
     region: ""

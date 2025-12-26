@@ -19,7 +19,7 @@ combinedDeployment:
 # Image Configuration
 # -----------------------------------------------------------------------------
 image:
-  repository: ilchoss/llamator-mcp
+  repository: ghcr.io/csu-itmo-2025-2/team11-llamator-mcp
   tag: "v0.1.0"
   pullPolicy: IfNotPresent
 # -----------------------------------------------------------------------------

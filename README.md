@@ -76,12 +76,23 @@ helm test llamator -n team11-ns
 Secrets are automatically synced from Vault via External Secrets Operator:
 
 ```yaml
-externalSecrets:
+vault:
   enabled: true
-  secretStoreKind: SecretStore
-  secretStoreName: "vault-team11"
-  vaultPath: "kv/data/team11/llamator"
+  secretStoreRef: "vault-team11"
+  secretStoreKind: "SecretStore"
   refreshInterval: "1m"
+  secretPath: "team11/llamator"
+  remoteRef:
+    openai:
+      key: "team11/llamator/openai"
+      property: "OPENAI_API_KEY"
+    api:
+      key: "team11/llamator/api"
+      property: "API_KEY"
+    s3:
+      key: "team11/llamator/s3"
+      accessKeyIdProperty: "ACCESS_KEY_ID"
+      secretAccessKeyProperty: "SECRET_ACCESS_KEY"
 ```
 
 ### S3 Storage Configuration

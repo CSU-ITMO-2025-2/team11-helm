@@ -86,7 +86,8 @@ spec:
                   name: {{ .Values.security.apiKey.existingSecret }}
                   key: {{ .Values.security.apiKey.secretKey }}
             {{- end }}
-            # OpenAI API keys
+            # OpenAI API keys (only when secrets are available)
+            {{- if .Values.security.openai.enabled }}
             - name: LLAMATOR_MCP_ATTACK_OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -102,7 +103,8 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.security.openai.target.secret.name }}
                   key: {{ .Values.security.openai.target.secret.key }}
-            # S3 Storage configuration
+            {{- end }}
+            # S3 Storage credentials
             {{- if .Values.storage.s3.enabled }}
             {{- if .Values.storage.s3.endpoint }}
             - name: S3_ENDPOINT_URL

@@ -49,7 +49,7 @@ SECRETS MANAGEMENT:
 {{- if .Values.vault.enabled }}
 ✓ External Secrets Operator: ENABLED
   - SecretStore: {{ .Values.vault.secretStoreRef }} ({{ .Values.vault.secretStoreKind }})
-  - Vault Path: {{ .Values.vault.secretPath }}
+  - Vault Path: {{ .Values.vault.secretPath | default "team11/llamator" }}
   - Refresh: {{ .Values.vault.refreshInterval }}
 
   ExternalSecrets created:
@@ -61,10 +61,10 @@ SECRETS MANAGEMENT:
   - {{ include "llamator-mcp.fullname" . }}-s3-keys-es → {{ .Values.storage.s3.existingSecret }}
   {{- end }}
 
-  Vault secrets structure:
-    kv/data/team11/llamator/openai → OPENAI_API_KEY
-    kv/data/team11/llamator/api    → API_KEY
-    kv/data/team11/llamator/s3     → ACCESS_KEY_ID, SECRET_ACCESS_KEY
+  Vault secrets structure (kv mount):
+    {{ .Values.vault.secretPath | default "team11/llamator" }}/openai → OPENAI_API_KEY
+    {{ .Values.vault.secretPath | default "team11/llamator" }}/api    → API_KEY
+    {{ .Values.vault.secretPath | default "team11/llamator" }}/s3     → ACCESS_KEY_ID, SECRET_ACCESS_KEY
 
 {{- else }}
 ⚠ External Secrets: DISABLED

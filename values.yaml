@@ -23,7 +23,7 @@ combinedDeployment:
 # -----------------------------------------------------------------------------
 image:
   repository: ilchoss/llamator-mcp
-  tag: "v0.1.0"
+  tag: "v0.2.1"
   pullPolicy: IfNotPresent
 
 # -----------------------------------------------------------------------------
@@ -384,11 +384,14 @@ networkPolicy:
 # -----------------------------------------------------------------------------
 monitoring:
   serviceMonitor:
-    enabled: false
+    enabled: true
+    namespace: "team11-ns"  # Namespace where ServiceMonitor is created
+    # namespace: "monitoring"  # Prometheus namespace (where ServiceMonitor is created)
     interval: "30s"
     path: "/metrics"
     scrapeTimeout: "10s"
-    labels: {}
+    labels:
+      release: monitoring  # Required label for Prometheus to discover this ServiceMonitor
     scheme: ""
     tlsConfig: {}
     relabelings: []

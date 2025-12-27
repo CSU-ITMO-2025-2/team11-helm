@@ -20,7 +20,7 @@ combinedDeployment:
 # -----------------------------------------------------------------------------
 image:
   repository: ghcr.io/csu-itmo-2025-2/team11-llamator-mcp
-  tag: "sha-56d9785"
+  tag: "sha-09ed6dd"
   pullPolicy: IfNotPresent
 # -----------------------------------------------------------------------------
 # API Server Configuration
@@ -338,13 +338,13 @@ networkPolicy:
 monitoring:
   serviceMonitor:
     enabled: true
-    namespace: "team11-ns"  # Namespace where ServiceMonitor is created
+    namespace: "team11-ns" # Namespace where ServiceMonitor is created
     # namespace: "monitoring"  # Prometheus namespace (where ServiceMonitor is created)
     interval: "30s"
     path: "/metrics"
     scrapeTimeout: "10s"
     labels:
-      release: monitoring  # Required label for Prometheus to discover this ServiceMonitor
+      release: monitoring # Required label for Prometheus to discover this ServiceMonitor
     scheme: ""
     tlsConfig: {}
     relabelings: []

@@ -14,7 +14,10 @@
     },
     "image": {
       "type": "object",
-      "required": ["repository", "tag"],
+      "required": [
+        "repository",
+        "tag"
+      ],
       "properties": {
         "repository": {
           "type": "string"
@@ -24,7 +27,11 @@
         },
         "pullPolicy": {
           "type": "string",
-          "enum": ["Always", "IfNotPresent", "Never"]
+          "enum": [
+            "Always",
+            "IfNotPresent",
+            "Never"
+          ]
         }
       }
     },
@@ -48,7 +55,11 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": ["ClusterIP", "NodePort", "LoadBalancer"]
+              "enum": [
+                "ClusterIP",
+                "NodePort",
+                "LoadBalancer"
+              ]
             },
             "port": {
               "type": "integer",
@@ -172,7 +183,11 @@
             },
             "attack": {
               "type": "object",
-              "required": ["baseUrl", "model", "secret"],
+              "required": [
+                "baseUrl",
+                "model",
+                "secret"
+              ],
               "properties": {
                 "baseUrl": {
                   "type": "string",
@@ -188,7 +203,10 @@
                 },
                 "secret": {
                   "type": "object",
-                  "required": ["name", "key"],
+                  "required": [
+                    "name",
+                    "key"
+                  ],
                   "properties": {
                     "name": {
                       "type": "string"
@@ -235,6 +253,41 @@
         }
       }
     },
+    "storage": {
+      "type": "object",
+      "properties": {
+        "s3": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "endpoint": {
+              "type": "string",
+              "format": "uri"
+            },
+            "bucket": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "keyPrefix": {
+              "type": "string"
+            },
+            "existingSecret": {
+              "type": "string"
+            },
+            "accessKeyIdKey": {
+              "type": "string"
+            },
+            "secretAccessKeyKey": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "ingress": {
       "type": "object",
       "properties": {
@@ -248,7 +301,9 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["host"],
+            "required": [
+              "host"
+            ],
             "properties": {
               "host": {
                 "type": "string"
@@ -263,7 +318,11 @@
                     },
                     "pathType": {
                       "type": "string",
-                      "enum": ["Prefix", "Exact", "ImplementationSpecific"]
+                      "enum": [
+                        "Prefix",
+                        "Exact",
+                        "ImplementationSpecific"
+                      ]
                     }
                   }
                 }
@@ -340,4 +399,3 @@
     }
   }
 }
-

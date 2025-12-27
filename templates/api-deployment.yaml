@@ -106,24 +106,12 @@ spec:
             {{- end }}
             # S3 Storage credentials
             {{- if .Values.storage.s3.enabled }}
-            {{- if .Values.storage.s3.endpoint }}
-            - name: S3_ENDPOINT_URL
-              value: {{ .Values.storage.s3.endpoint | quote }}
-            {{- end }}
-            {{- if .Values.storage.s3.bucket }}
-            - name: S3_BUCKET
-              value: {{ .Values.storage.s3.bucket | quote }}
-            {{- end }}
-            {{- if .Values.storage.s3.region }}
-            - name: S3_REGION
-              value: {{ .Values.storage.s3.region | quote }}
-            {{- end }}
-            - name: S3_ACCESS_KEY_ID
+            - name: LLAMATOR_MCP_S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.storage.s3.existingSecret }}
                   key: {{ .Values.storage.s3.accessKeyIdKey }}
-            - name: S3_ACCESS_KEY
+            - name: LLAMATOR_MCP_S3_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.storage.s3.existingSecret }}
@@ -163,12 +151,12 @@ spec:
       volumes:
         - name: artifacts
           {{- if .Values.artifacts.useEmptyDir }}
-          emptyDir: {}
+          emptyDir: { }
           {{- else if .Values.artifacts.persistence.enabled }}
           persistentVolumeClaim:
             claimName: {{ include "llamator-mcp.artifacts.pvc.name" . }}
           {{- else }}
-          emptyDir: {}
+          emptyDir: { }
           {{- end }}
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}

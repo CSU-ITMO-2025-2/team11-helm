@@ -7,13 +7,13 @@
 # -----------------------------------------------------------------------------
 global:
   namespace: team11-ns # Namespace с правами
-  imagePullSecrets: []
+  imagePullSecrets: [ ]
 nameOverride: ""
 fullnameOverride: "llamator-mcp-auto"
 # Combined deployment: api + worker in same pod (share artifacts via emptyDir)
 # Enable this if you don't have a ReadWriteMany storage class
 combinedDeployment:
-  enabled: true
+  enabled: false
   replicaCount: 1
 # -----------------------------------------------------------------------------
 # Image Configuration
@@ -33,7 +33,7 @@ api:
     type: ClusterIP
     port: 8000
     targetPort: 8000
-    annotations: {}
+    annotations: { }
   autoscaling:
     enabled: false # Disabled to stay within 3 CPU / 6 GiB quota
     minReplicas: 1
@@ -81,11 +81,11 @@ api:
   podAntiAffinity:
     enabled: false
     topologyKey: kubernetes.io/hostname
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-  podAnnotations: {}
-  hostAliases: []
+  nodeSelector: { }
+  tolerations: [ ]
+  affinity: { }
+  podAnnotations: { }
+  hostAliases: [ ]
   #   - ip: "192.168.49.1"
   #     hostnames:
   #       - "host.docker.internal"
@@ -138,10 +138,10 @@ worker:
   podAntiAffinity:
     enabled: false
     topologyKey: kubernetes.io/hostname
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-  podAnnotations: {}
+  nodeSelector: { }
+  tolerations: [ ]
+  affinity: { }
+  podAnnotations: { }
   # reuses same image.* as api by default
   command:
     - "arq"
@@ -211,6 +211,7 @@ config:
   httpPort: "8000"
   mcpMountPath: "/mcp"
   mcpStreamableHttpPath: "/"
+  artifactsBackend: "s3"
 # -----------------------------------------------------------------------------
 # Security Configuration
 # -----------------------------------------------------------------------------
@@ -258,9 +259,10 @@ storage:
     endpoint: "https://s3.regru.cloud"
     bucket: "team11"
     region: ""
+    keyPrefix: "llamator-mcp"
     existingSecret: "llamator-mcp-auto-s3-keys"
-    accessKeyIdKey: "S3_ACCESS_KEY_ID"
-    secretAccessKeyKey: "S3_ACCESS_KEY"
+    accessKeyIdKey: "LLAMATOR_MCP_S3_ACCESS_KEY_ID"
+    secretAccessKeyKey: "LLAMATOR_MCP_S3_SECRET_ACCESS_KEY"
 # -----------------------------------------------------------------------------
 # Vault External Secrets configuration
 # -----------------------------------------------------------------------------
@@ -297,16 +299,16 @@ vault:
 serviceAccount:
   create: true
   name: "llamator-mcp-sa"
-  annotations: {}
+  annotations: { }
 rbac:
   create: true
   rules:
-    - apiGroups: [""]
-      resources: ["pods", "services", "configmaps"]
-      verbs: ["get", "list", "watch"]
-    - apiGroups: [""]
-      resources: ["secrets"]
-      verbs: ["get"]
+    - apiGroups: [ "" ]
+      resources: [ "pods", "services", "configmaps" ]
+      verbs: [ "get", "list", "watch" ]
+    - apiGroups: [ "" ]
+      resources: [ "secrets" ]
+      verbs: [ "get" ]
 # -----------------------------------------------------------------------------
 # Ingress Configuration
 # -----------------------------------------------------------------------------
@@ -331,7 +333,7 @@ networkPolicy:
   enabled: false # Отключено - нет прав
   allowExternalEgress: true
   ingressNamespace: "ingress-nginx"
-  egressRules: []
+  egressRules: [ ]
 # -----------------------------------------------------------------------------
 # Monitoring
 # -----------------------------------------------------------------------------
@@ -346,9 +348,9 @@ monitoring:
     labels:
       release: monitoring  # Required label for Prometheus to discover this ServiceMonitor
     scheme: ""
-    tlsConfig: {}
-    relabelings: []
-    metricRelabelings: []
+    tlsConfig: { }
+    relabelings: [ ]
+    metricRelabelings: [ ]
   podAnnotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "8000"
@@ -370,8 +372,8 @@ resourceQuota:
     services: "10"
     secrets: "20"
     configmaps: "20"
-  scopeSelector: {}
-  scopes: []
+  scopeSelector: { }
+  scopes: [ ]
 # -----------------------------------------------------------------------------
 # Limit Range
 # -----------------------------------------------------------------------------
@@ -405,6 +407,6 @@ limitRange:
 # -----------------------------------------------------------------------------
 # Extra Configuration
 # -----------------------------------------------------------------------------
-extraEnv: []
-extraVolumes: []
-extraVolumeMounts: []
+extraEnv: [ ]
+extraVolumes: [ ]
+extraVolumeMounts: [ ]

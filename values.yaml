@@ -220,7 +220,7 @@ security:
   createExampleSecrets: false
   # API Key для аутентификации клиентов
   apiKey:
-    enabled: false
+    enabled: true
     existingSecret: "llamator-mcp-auto-api-key"
     secretKey: "LLAMATOR_MCP_API_KEY"
   # OpenAI configuration - secrets are created by ESO from Vault

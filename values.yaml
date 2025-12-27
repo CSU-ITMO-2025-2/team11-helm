@@ -9,7 +9,7 @@ global:
   namespace: team11-ns # Namespace с правами
   imagePullSecrets: []
 nameOverride: ""
-fullnameOverride: "llamator-mcp"
+fullnameOverride: "llamator-mcp-auto"
 # Combined deployment: api + worker in same pod (share artifacts via emptyDir)
 # Enable this if you don't have a ReadWriteMany storage class
 combinedDeployment:

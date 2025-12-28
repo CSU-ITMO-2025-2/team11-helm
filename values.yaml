@@ -37,7 +37,7 @@ api:
   autoscaling:
     enabled: true
     minReplicas: 1
-    maxReplicas: 3
+    maxReplicas: 2
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 70
   podDisruptionBudget:
@@ -63,11 +63,11 @@ api:
     failureThreshold: 3
   resources:
     requests:
-      cpu: "200m"
-      memory: "256Mi"
+      cpu: "150m"
+      memory: "192Mi"
     limits:
-      cpu: "800m"
-      memory: "768Mi"
+      cpu: "400m"
+      memory: "512Mi"
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 1000
@@ -101,7 +101,7 @@ worker:
   autoscaling:
     enabled: true
     minReplicas: 1
-    maxReplicas: 3
+    maxReplicas: 2
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 70
   podDisruptionBudget:
@@ -120,11 +120,11 @@ worker:
     failureThreshold: 3
   resources:
     requests:
-      cpu: "200m"
-      memory: "256Mi"
+      cpu: "150m"
+      memory: "192Mi"
     limits:
-      cpu: "800m"
-      memory: "768Mi"
+      cpu: "400m"
+      memory: "512Mi"
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 1000
@@ -176,8 +176,8 @@ redis:
       cpu: "50m"
       memory: "64Mi"
     limits:
-      cpu: "200m"
-      memory: "256Mi"
+      cpu: "150m"
+      memory: "192Mi"
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 999

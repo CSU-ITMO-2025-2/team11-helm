@@ -35,13 +35,13 @@ api:
     targetPort: 8000
     annotations: {}
   autoscaling:
-    enabled: false # Disabled to stay within 3 CPU / 6 GiB quota
+    enabled: true
     minReplicas: 1
-    maxReplicas: 1
-    targetCPUUtilizationPercentage: 70
-    targetMemoryUtilizationPercentage: 80
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 70
   podDisruptionBudget:
-    enabled: false
+    enabled: true
     minAvailable: 1
   livenessProbe:
     enabled: true
@@ -63,11 +63,11 @@ api:
     failureThreshold: 3
   resources:
     requests:
-      cpu: "100m"
-      memory: "128Mi"
+      cpu: "200m"
+      memory: "256Mi"
     limits:
-      cpu: "500m"
-      memory: "512Mi"
+      cpu: "800m"
+      memory: "768Mi"
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 1000
@@ -99,13 +99,13 @@ worker:
   enabled: true
   replicaCount: 1
   autoscaling:
-    enabled: false # Disabled to stay within 3 CPU / 6 GiB quota
+    enabled: true
     minReplicas: 1
-    maxReplicas: 1
-    targetCPUUtilizationPercentage: 75
-    targetMemoryUtilizationPercentage: 80
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 70
   podDisruptionBudget:
-    enabled: false
+    enabled: true
     minAvailable: 1
   livenessProbe:
     enabled: false
@@ -120,11 +120,11 @@ worker:
     failureThreshold: 3
   resources:
     requests:
-      cpu: "100m"
-      memory: "128Mi"
+      cpu: "200m"
+      memory: "256Mi"
     limits:
-      cpu: "500m"
-      memory: "512Mi"
+      cpu: "800m"
+      memory: "768Mi"
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 1000

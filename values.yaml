@@ -20,7 +20,7 @@ combinedDeployment:
 # -----------------------------------------------------------------------------
 image:
   repository: ghcr.io/csu-itmo-2025-2/team11-llamator-mcp
-  tag: "sha-927d126"
+  tag: "sha-6cb915b"
   pullPolicy: IfNotPresent
 # -----------------------------------------------------------------------------
 # API Server Configuration
